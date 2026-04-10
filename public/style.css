@@ -1,0 +1,197 @@
+/* --- Root Variables for Consistency --- */
+:root {
+    --primary: #203a43;
+    --accent: #2c5364;
+    --success: #27ae60;
+    --info: #3498db;
+    --danger: #e74c3c;
+    --warning: #f1c40f;
+    --text-dark: #2d3436;
+    --bg-light: #f4f6f9;
+    --white: #ffffff;
+    --pmh-red: #b01e23;
+}
+
+/* --- Base Styles --- */
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    margin: 0;
+    line-height: 1.6;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* --- Navigation Bar --- */
+.nav {
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    padding: 1rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav h2 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; }
+
+.nav-links { display: flex; gap: 15px; }
+
+.nav a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+/* --- Container & Dashboard --- */
+.container { padding: 15px; max-width: 1200px; margin: auto; }
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
+    gap: 15px;
+    padding: 10px 0;
+}
+
+@media (min-width: 600px) {
+    .dashboard { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
+
+.card {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    text-align: center;
+    border-bottom: 4px solid var(--primary);
+}
+
+/* --- MOBILE CARD DESIGN (Booking Management) --- */
+.booking-card {
+    background: var(--white);
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border-left: 5px solid #ccc;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+/* Fix: Vertical stack for data to ensure dates show fully */
+.card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-body div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: #555;
+    word-break: break-word; /* Prevents text cutting off */
+}
+
+.card-body b { color: var(--text-dark); }
+
+.card-body i {
+    color: var(--pmh-red);
+    font-size: 1.1rem;
+    min-width: 20px;
+}
+
+/* --- Calendar Adaptability --- */
+#calendar {
+    background: white;
+    padding: 10px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    min-height: 500px;
+}
+
+/* Force calendar titles to wrap on mobile */
+.fc-event-title, .fc-list-event-title {
+    white-space: normal !important;
+    font-size: 0.85rem;
+}
+
+/* --- Table Styling (Desktop) --- */
+.table-wrapper {
+    background: var(--white);
+    padding: 10px;
+    border-radius: 10px;
+    overflow-x: auto;
+    display: block;
+}
+
+.table { width: 100%; border-collapse: collapse; min-width: 850px; }
+.table th { background-color: #f8f9fa; padding: 12px; text-align: left; font-size: 0.9rem; }
+.table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+
+/* --- Status Badges --- */
+.status-badge, .badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+}
+.status-pending { background-color: #ffebee; color: #c62828; }
+.status-partial { background-color: #fff3e0; color: #ef6c00; }
+.status-paid { background-color: #e8f5e9; color: #2e7d32; }
+
+/* --- Buttons --- */
+.btn-action, .action-btn {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    transition: 0.2s;
+    color: white;
+}
+
+.btn-pay { background-color: var(--warning); color: #2d3436; }
+.btn-edit { background-color: var(--info); }
+.btn-bill { background-color: var(--success); }
+.btn-delete, .btn-del { background-color: var(--danger); }
+
+/* --- Form Elements --- */
+input, select, textarea {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-size: 16px; /* Essential for mobile zoom prevention */
+    background-color: var(--white);
+    margin-bottom: 10px;
+}
+
+/* --- Mobile Specific Tweaks --- */
+@media (max-width: 768px) {
+    .nav { flex-direction: column; gap: 10px; }
+    .nav-links { width: 100%; justify-content: space-around; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); }
+    
+    .table-wrapper { display: none; } /* Hide wide tables on mobile */
+    
+    h1 { font-size: 1.3rem; text-align: center; }
+}
