@@ -30,16 +30,17 @@ function shareOnWhatsApp(id) {
     const end = formatDateDisplay(b.dateTo);
     const dateRange = (b.dateTo && b.dateTo !== b.dateFrom) ? `${start} to ${end}` : start;
 
-    // Professional WhatsApp Message Template
     const message = `*PANDEY MARRIAGE HALL - RECEIPT*%0A------------------------------%0A*Customer:* ${b.name}%0A*Event:* ${b.occasion}%0A*Dates:* ${dateRange}%0A------------------------------%0A*Total Amount:* ₹${b.total}%0A*Paid Amount:* ₹${b.paid}%0A*Remaining Balance:* ₹${b.remaining}%0A------------------------------%0A_Thank you for choosing Pandey Marriage Hall!_`;
 
     window.open(`https://wa.me/91${b.phone}?text=${message}`, '_blank');
 }
 
-// 1. Load data from the server
+// 1. Load data from the server (UPDATED WITH RENDER URL)
 async function loadBookings() {
     try {
-        const res = await fetch("/api/bookings");
+        // Points directly to your Render backend
+        const res = await fetch("https://pandey-marriage-hall.onrender.com/api/bookings");
+        
         if (!res.ok) throw new Error("Failed to fetch");
         bookingsData = await res.json();
         displayBookings(bookingsData);
@@ -74,7 +75,6 @@ function displayBookings(data) {
         else if (b.paid > 0) status = "Partial";
         const statusClass = status.toLowerCase();
 
-        // --- 2A. POPULATE MOBILE CARDS ---
         if (list) {
             const card = document.createElement("div");
             card.className = `booking-card status-${statusClass}`;
@@ -112,7 +112,6 @@ function displayBookings(data) {
             list.appendChild(card);
         }
 
-        // --- 2B. POPULATE DESKTOP TABLE ---
         if (table) {
             const row = document.createElement("tr");
             row.innerHTML = `
@@ -141,7 +140,7 @@ function displayBookings(data) {
     });
 }
 
-// --- ENHANCED QUICK PAY HANDLER ---
+// --- ENHANCED QUICK PAY HANDLER (UPDATED WITH RENDER URL) ---
 function quickPay(id, currentPaid, total, name) {
     const remaining = total - currentPaid;
     const modal = document.getElementById("paymentModal");
@@ -165,7 +164,8 @@ function quickPay(id, currentPaid, total, name) {
 
         const newPaidTotal = parseFloat(currentPaid) + amt;
         try {
-            const res = await fetch("/api/bookings/" + id, {
+            // Updated to point to Render backend
+            const res = await fetch("https://pandey-marriage-hall.onrender.com/api/bookings/" + id, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
@@ -189,11 +189,11 @@ function closeModal() {
     if(modal) modal.style.display = "none";
 }
 
-// 3. Delete a booking
+// 3. Delete a booking (UPDATED WITH RENDER URL)
 async function deleteBooking(id) {
     if (!confirm("Are you sure you want to delete this booking?")) return;
     try {
-        const res = await fetch("/api/bookings/" + id, { method: "DELETE" });
+        const res = await fetch("https://pandey-marriage-hall.onrender.com/api/bookings/" + id, { method: "DELETE" });
         if (res.ok) loadBookings();
     } catch (err) { console.error("Delete error:", err); }
 }
@@ -235,7 +235,7 @@ function generateYears() {
     }
 }
 
-// 7. FULL BILL GENERATOR (Internal View & Printing)
+// 7. FULL BILL GENERATOR (Everything Kept Intact)
 function generateBill(id) {
     const booking = bookingsData.find(b => b._id === id);
     if (!booking) return;
