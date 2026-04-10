@@ -3,239 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Booking Calendar | Pandey Marriage Hall</title>
+    <title>Calendar | Pandey Marriage Hall</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
-    <link rel="manifest" href="/manifest.json">
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js");
-  }
-</script>
-
     <style>
         :root {
             --pmh-red: #b01e23;
-            --pmh-red-dark: #8a171b;
-            --bg-gray: #f4f7f6;
+            --pmh-dark: #203a43;
             --success: #27ae60;
             --danger: #e74c3c;
-            --pmh-dark: #203a43;
+            --bg-gray: #f4f7f6;
         }
 
         body {
             background-color: var(--bg-gray);
             margin: 0;
-            padding-bottom: 90px; 
+            padding-bottom: 90px;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- App Header --- */
+        /* --- Header --- */
         .app-header {
             background: linear-gradient(to right, #0f2027, #203a43);
             color: white;
-            padding: 15px 20px;
+            padding: 15px;
             text-align: center;
             position: sticky;
             top: 0;
             z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-
         .app-header h2 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; }
 
-        .container {
-            padding: 10px;
-            max-width: 1100px;
-            margin: auto;
-        }
+        .container { padding: 15px; max-width: 1000px; margin: auto; }
 
-        /* --- Calendar Styling --- */
+        /* --- CALENDAR UI --- */
         #calendar {
             background: white;
-            padding: 12px;
-            border-radius: 18px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            min-height: 500px;
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            height: 72vh;
         }
 
-        .legend {
-            display: flex;
+        .fc-event {
+            border: none !important;
+            background: transparent !important;
+            display: flex !important;
             justify-content: center;
-            gap: 15px;
-            margin: 12px 0;
-            font-size: 0.8rem;
-            font-weight: 600;
+            cursor: pointer;
         }
 
-        .legend-item { display: flex; align-items: center; gap: 6px; }
-        .dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; }
-
-        /* FullCalendar Customization */
-        .fc-event-title {
-            font-weight: 600;
-            font-size: 0.85rem !important;
-            padding: 2px 4px;
-        }
-
-        .fc-toolbar-title { font-size: 1.1rem !important; color: var(--pmh-dark); font-weight: 700; }
-        .fc-button-primary { 
-            background-color: var(--pmh-dark) !important; 
-            border-color: var(--pmh-dark) !important; 
-            border-radius: 8px !important;
-            font-weight: 600 !important;
-        }
-        
-        .fc-day-today { background: rgba(176, 30, 35, 0.05) !important; }
-
-        /* --- Bottom Navigation (Dashboard Style) --- */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-            z-index: 1000;
-        }
-
-        .nav-item {
-            text-decoration: none; color: #bbb;
-            text-align: center; flex: 1;
-            display: flex; flex-direction: column; align-items: center;
-            transition: 0.3s;
-        }
-
-        .nav-item i { font-size: 1.4rem; transition: transform 0.2s; }
-        .nav-item span { font-size: 0.7rem; font-weight: 600; margin-top: 2px; }
-        .nav-item.active { color: var(--pmh-red); }
-
-        /* --- Floating Action Button (NEW - Dashboard Design) --- */
-        .fab {
-            background: var(--pmh-red);
-            color: white;
-            width: 55px;
-            height: 55px;
+        .custom-event-dot {
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(176, 30, 35, 0.4);
-            margin-top: -30px; /* Pulls it up out of the nav bar */
-            border: 4px solid white;
-            transition: 0.3s;
+            margin-top: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .fab i { font-size: 1.8rem; color: white; }
-        .nav-item:active .fab { transform: scale(0.9); }
-
-        @media (max-width: 768px) {
-            .fc-header-toolbar { display: flex; flex-direction: column; gap: 10px; }
-            #calendar { padding: 8px; border-radius: 12px; }
-            .fc-toolbar-title { font-size: 1rem !important; }
+        /* --- POPUP MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: none; align-items: center;
+            justify-content: center; z-index: 2000; padding: 20px;
+            backdrop-filter: blur(5px);
         }
+        .modal-content {
+            background: white; width: 100%; max-width: 350px; border-radius: 25px;
+            padding: 25px; text-align: center; position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header { font-size: 1.2rem; font-weight: 800; color: var(--pmh-dark); margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .detail-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; }
+        .detail-item b { color: #888; font-weight: 600; }
+
+        /* Internal View Button */
+        .btn-view { 
+            background: #2c3e50; 
+            color: white; 
+            width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            margin-top: 15px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+            cursor: pointer; 
+        }
+
+        /* --- Nav --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-item { text-decoration: none; color: #bbb; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .nav-item.active { color: var(--pmh-red); }
+        .nav-item span { font-size: 0.7rem; font-weight: 600; }
+        .fab { background: var(--pmh-red); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -35px; border: 4px solid white; }
     </style>
 </head>
 <body>
 
     <header class="app-header">
-        <h2>AVAILABILITY CALENDAR</h2>
+        <h2>SCHEDULE VIEW</h2>
     </header>
 
     <div class="container">
-        <div class="legend">
-            <div class="legend-item"><span class="dot" style="background: var(--success);"></span> Full Paid</div>
-            <div class="legend-item"><span class="dot" style="background: var(--danger);"></span> Bal. Pending</div>
-        </div>
-
         <div id="calendar"></div>
     </div>
 
+    <div id="popupModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header" id="popName">Customer Info</div>
+            <div class="detail-item"><b>Occasion:</b> <span id="popOcc"></span></div>
+            <div class="detail-item"><b>Phone:</b> <span id="popPhone"></span></div>
+            <div class="detail-item"><b>Balance:</b> <span id="popBal"></span></div>
+            
+            <button class="btn-view" id="viewFullBtn">
+                <i class="ri-eye-line"></i> View All Details
+            </button>
+            <button onclick="closeModal()" style="margin-top:15px; border:none; background:none; color:#999; font-weight:700; cursor:pointer;">CLOSE</button>
+        </div>
+    </div>
+
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item">
-            <i class="ri-dashboard-3-line"></i>
-            <span>Home</span>
-        </a>
-        <a href="bookings.html" class="nav-item">
-            <i class="ri-book-read-line"></i>
-            <span>Bookings</span>
-        </a>
+        <a href="index.html" class="nav-item"><i class="ri-home-5-line" style="font-size:1.5rem;"></i><span>Home</span></a>
+        <a href="bookings.html" class="nav-item"><i class="ri-book-read-line" style="font-size:1.5rem;"></i><span>Bookings</span></a>
         <a href="new-booking.html" class="nav-item">
-            <div class="fab">
-                <i class="ri-add-line"></i>
-            </div>
+            <div class="fab"><i class="ri-add-line" style="font-size:1.8rem;"></i></div>
             <span>New</span>
         </a>
-        <a href="calendar.html" class="nav-item active">
-            <i class="ri-calendar-todo-fill"></i>
-            <span>Calendar</span>
-        </a>
+        <a href="calendar.html" class="nav-item active"><i class="ri-calendar-todo-fill" style="font-size:1.5rem;"></i><span>Calendar</span></a>
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 
     <script>
+        function closeModal() { document.getElementById("popupModal").style.display = "none"; }
+
+        // --- INTERNAL FULL DETAILS VIEW ---
+        function openInternalDetails(b) {
+            const win = window.open("", "_blank");
+            win.document.write(`
+                <html>
+                <head>
+                    <title>Internal Details - ${b.name}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', sans-serif; padding: 20px; color: #333; background: #f9f9f9; }
+                        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+                        h2 { color: #b01e23; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top:0; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        td { padding: 12px; border-bottom: 1px solid #f1f1f1; vertical-align: top; }
+                        .label { font-weight: bold; color: #666; width: 40%; }
+                        .val { color: #000; }
+                        .money { font-weight: bold; font-size: 1.1rem; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <h2>ADMIN VIEW: Booking Details</h2>
+                        <table>
+                            <tr><td class="label">Booking ID</td><td class="val">${b.bookingId || 'N/A'}</td></tr>
+                            <tr><td class="label">Customer Name</td><td class="val">${b.name}</td></tr>
+                            <tr><td class="label">Mobile Number</td><td class="val">${b.phone}</td></tr>
+                            <tr><td class="label">Occasion</td><td class="val">${b.occasion}</td></tr>
+                            <tr><td class="label">Address</td><td class="val">${b.address || '-'}</td></tr>
+                            <tr><td class="label">Start Date</td><td class="val">${b.dateFrom}</td></tr>
+                            <tr><td class="label">End Date</td><td class="val">${b.dateTo || b.dateFrom}</td></tr>
+                            <tr><td class="label">Time</td><td class="val">${b.timeFrom || ''} to ${b.timeTo || ''}</td></tr>
+                            <tr><td class="label">Total Amount</td><td class="val money">₹${b.total}</td></tr>
+                            <tr><td class="label">Advance Paid</td><td class="val money" style="color:green;">₹${b.paid}</td></tr>
+                            <tr><td class="label">Balance Due</td><td class="val money" style="color:red;">₹${b.remaining}</td></tr>
+                        </table>
+                        <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Internal Record - Pandey Marriage Hall</p>
+                    </div>
+                </body>
+                </html>
+            `);
+            win.document.close();
+        }
+
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 const res = await fetch("/api/bookings");
                 const bookings = await res.json();
-
-                const events = bookings.map(b => {
-                    let endDate = new Date(b.dateTo || b.dateFrom);
-                    endDate.setDate(endDate.getDate() + 1); 
-
-                    return {
-                        id: b._id,
-                        title: `${b.name} (${b.occasion})`,
-                        start: b.dateFrom,
-                        end: endDate.toISOString().split('T')[0],
-                        backgroundColor: b.remaining <= 0 ? "#27ae60" : "#e74c3c",
-                        borderColor: 'transparent',
-                        extendedProps: {
-                            phone: b.phone,
-                            remaining: b.remaining,
-                            occasion: b.occasion
-                        }
-                    };
-                });
-
                 const calendarEl = document.getElementById('calendar');
+
                 const calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth',
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: window.innerWidth < 768 ? 'dayGridMonth,listMonth' : 'dayGridMonth,timeGridWeek,listMonth'
-                    },
-                    events: events,
-                    height: 'auto',
+                    initialView: 'dayGridMonth',
+                    headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+                    events: bookings.flatMap(b => {
+                        let eventsArray = [];
+                        let curr = new Date(b.dateFrom);
+                        let end = new Date(b.dateTo || b.dateFrom);
+                        while(curr <= end) {
+                            eventsArray.push({
+                                start: curr.toISOString().split('T')[0],
+                                backgroundColor: b.remaining > 0 ? '#e74c3c' : '#27ae60',
+                                extendedProps: { raw: b }
+                            });
+                            curr.setDate(curr.getDate() + 1);
+                        }
+                        return eventsArray;
+                    }),
+
+                    eventContent: (arg) => ({ html: `<div class="custom-event-dot" style="background-color:${arg.event.backgroundColor}"></div>` }),
+
                     eventClick: function(info) {
-                        const props = info.event.extendedProps;
-                        alert(
-                            `📅 Booking Details\n` +
-                            `--------------------------\n` +
-                            `👤 Name: ${info.event.title}\n` +
-                            `📞 Phone: ${props.phone}\n` +
-                            `💰 Bal: ₹${props.remaining}\n` +
-                            `💍 Event: ${props.occasion}`
-                        );
+                        const b = info.event.extendedProps.raw;
+                        document.getElementById("popName").innerText = b.name;
+                        document.getElementById("popOcc").innerText = b.occasion;
+                        document.getElementById("popPhone").innerText = b.phone;
+                        document.getElementById("popBal").innerHTML = `<b style="color:${b.remaining > 0 ? 'red' : 'green'}">₹${b.remaining}</b>`;
+
+                        document.getElementById("viewFullBtn").onclick = () => openInternalDetails(b);
+                        document.getElementById("popupModal").style.display = "flex";
                     }
                 });
 
                 calendar.render();
-
-                window.addEventListener('resize', () => {
-                    const newView = window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth';
-                    if (calendar.view.type !== newView) {
-                        calendar.changeView(newView);
-                    }
-                });
-
-            } catch (err) {
-                console.error("Error loading calendar events:", err);
-            }
+            } catch (err) { console.error(err); }
         });
     </script>
 </body>

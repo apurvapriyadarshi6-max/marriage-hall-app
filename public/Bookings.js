@@ -14,6 +14,28 @@ function formatDateDisplay(dateStr) {
     return `${day} ${months[monthIndex]} ${year}`;
 }
 
+// --- NEW ACTION FUNCTIONS ---
+
+// 1. Direct Calling Logic
+function makeCall(phone) {
+    window.location.href = `tel:${phone}`;
+}
+
+// 2. Direct WhatsApp Text Receipt Logic
+function shareOnWhatsApp(id) {
+    const b = bookingsData.find(item => item._id === id);
+    if (!b) return;
+
+    const start = formatDateDisplay(b.dateFrom);
+    const end = formatDateDisplay(b.dateTo);
+    const dateRange = (b.dateTo && b.dateTo !== b.dateFrom) ? `${start} to ${end}` : start;
+
+    // Professional WhatsApp Message Template
+    const message = `*PANDEY MARRIAGE HALL - RECEIPT*%0A------------------------------%0A*Customer:* ${b.name}%0A*Event:* ${b.occasion}%0A*Dates:* ${dateRange}%0A------------------------------%0A*Total Amount:* ₹${b.total}%0A*Paid Amount:* ₹${b.paid}%0A*Remaining Balance:* ₹${b.remaining}%0A------------------------------%0A_Thank you for choosing Pandey Marriage Hall!_`;
+
+    window.open(`https://wa.me/91${b.phone}?text=${message}`, '_blank');
+}
+
 // 1. Load data from the server
 async function loadBookings() {
     try {
@@ -31,7 +53,7 @@ async function loadBookings() {
 // 2. Display bookings (Supports Desktop Table & Mobile Cards)
 function displayBookings(data) {
     const table = document.getElementById("bookingTable");
-    const list = document.getElementById("bookingList"); // For Mobile Card View
+    const list = document.getElementById("bookingList"); 
     
     if (table) table.innerHTML = "";
     if (list) list.innerHTML = "";
@@ -45,19 +67,14 @@ function displayBookings(data) {
     data.forEach(b => {
         const start = formatDateDisplay(b.dateFrom);
         const end = formatDateDisplay(b.dateTo);
-        
-        // ENHANCED: Full date range logic for better visibility
-        const dateRangeText = (b.dateTo && b.dateTo !== b.dateFrom) 
-            ? `${start} — ${end}` 
-            : start;
+        const dateRangeText = (b.dateTo && b.dateTo !== b.dateFrom) ? `${start} — ${end}` : start;
         
         let status = "Pending";
         if (b.remaining <= 0) status = "Paid";
         else if (b.paid > 0) status = "Partial";
-
         const statusClass = status.toLowerCase();
 
-        // --- 2A. POPULATE MOBILE CARDS (Enhanced for visibility) ---
+        // --- 2A. POPULATE MOBILE CARDS ---
         if (list) {
             const card = document.createElement("div");
             card.className = `booking-card status-${statusClass}`;
@@ -83,7 +100,9 @@ function displayBookings(data) {
                 <div class="card-footer">
                     <div class="price-info"><small>Total: ₹${b.total}</small></div>
                     <div class="btn-group">
-                        ${b.remaining > 0 ? `<button class="action-btn btn-pay" onclick="quickPay('${b._id}', ${b.paid}, ${b.total})"><i class="ri-hand-coin-line"></i></button>` : ''}
+                        <button class="action-btn btn-call" title="Call Customer" onclick="makeCall('${b.phone}')"><i class="ri-phone-fill"></i></button>
+                        <button class="action-btn btn-whatsapp" title="WhatsApp Receipt" onclick="shareOnWhatsApp('${b._id}')"><i class="ri-whatsapp-line"></i></button>
+                        ${b.remaining > 0 ? `<button class="action-btn btn-pay" onclick="quickPay('${b._id}', ${b.paid}, ${b.total}, '${b.name}')"><i class="ri-hand-coin-line"></i></button>` : ''}
                         <button class="action-btn btn-edit" onclick="editBooking('${b._id}')"><i class="ri-edit-line"></i></button>
                         <button class="action-btn btn-bill" onclick="generateBill('${b._id}')"><i class="ri-file-list-3-line"></i></button>
                         <button class="action-btn btn-del" onclick="deleteBooking('${b._id}')"><i class="ri-delete-bin-line"></i></button>
@@ -108,10 +127,12 @@ function displayBookings(data) {
                 <td><span class="status-badge status-${statusClass}">${status}</span></td>
                 <td>
                     <div style="display:flex; gap:5px;">
-                        ${b.remaining > 0 ? `<button class="btn-action btn-pay" onclick="quickPay('${b._id}', ${b.paid}, ${b.total})">Pay</button>` : ''}
-                        <button class="btn-action btn-edit" onclick="editBooking('${b._id}')">Edit</button>
-                        <button class="btn-action btn-bill" onclick="generateBill('${b._id}')">Bill</button>
-                        <button class="btn-action btn-delete" onclick="deleteBooking('${b._id}')">Delete</button>
+                        <button class="action-btn btn-call" title="Call" onclick="makeCall('${b.phone}')"><i class="ri-phone-fill"></i></button>
+                        <button class="action-btn btn-whatsapp" title="WhatsApp" onclick="shareOnWhatsApp('${b._id}')"><i class="ri-whatsapp-line"></i></button>
+                        ${b.remaining > 0 ? `<button class="action-btn btn-pay" onclick="quickPay('${b._id}', ${b.paid}, ${b.total}, '${b.name}')">Pay</button>` : ''}
+                        <button class="action-btn btn-edit" onclick="editBooking('${b._id}')">Edit</button>
+                        <button class="action-btn btn-bill" onclick="generateBill('${b._id}')">Bill</button>
+                        <button class="action-btn btn-del" onclick="deleteBooking('${b._id}')">Delete</button>
                     </div>
                 </td>
             `;
@@ -120,45 +141,61 @@ function displayBookings(data) {
     });
 }
 
-// --- Quick Payment Handler ---
-async function quickPay(id, currentPaid, total) {
+// --- ENHANCED QUICK PAY HANDLER ---
+function quickPay(id, currentPaid, total, name) {
     const remaining = total - currentPaid;
-    const additionalAmount = prompt(`Total Balance: ₹${remaining}\nEnter amount received from customer:`);
-    
-    if (additionalAmount === null || additionalAmount === "" || isNaN(additionalAmount)) return;
+    const modal = document.getElementById("paymentModal");
+    const nameTag = document.getElementById("modalCustomerName");
+    const balanceText = document.getElementById("modalBalanceText");
+    const confirmBtn = document.getElementById("confirmPaymentBtn");
+    const input = document.getElementById("paymentInput");
 
-    const newPaidTotal = parseFloat(currentPaid) + parseFloat(additionalAmount);
+    modal.style.display = "flex";
+    if(nameTag) nameTag.innerText = name;
+    if(balanceText) balanceText.innerText = `Pending Balance: ₹${remaining}`;
+    input.value = "";
+    setTimeout(() => input.focus(), 100);
 
-    try {
-        const res = await fetch("/api/bookings/" + id, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-                paid: newPaidTotal,
-                remaining: Math.round(total - newPaidTotal)
-            })
-        });
-
-        if (res.ok) {
-            alert("✅ Payment Updated Successfully!");
-            loadBookings();
-        } else {
-            alert("❌ Error updating payment.");
+    confirmBtn.onclick = async () => {
+        const amt = parseFloat(input.value);
+        if (!amt || isNaN(amt) || amt <= 0) {
+            alert("Please enter a valid amount");
+            return;
         }
-    } catch (err) {
-        console.error("Payment error:", err);
-    }
+
+        const newPaidTotal = parseFloat(currentPaid) + amt;
+        try {
+            const res = await fetch("/api/bookings/" + id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    paid: newPaidTotal,
+                    remaining: Math.round(total - newPaidTotal) 
+                })
+            });
+
+            if (res.ok) {
+                closeModal();
+                loadBookings();
+            } else {
+                alert("❌ Error updating payment.");
+            }
+        } catch (err) { console.error("Payment error:", err); }
+    };
+}
+
+function closeModal() {
+    const modal = document.getElementById("paymentModal");
+    if(modal) modal.style.display = "none";
 }
 
 // 3. Delete a booking
 async function deleteBooking(id) {
-    if (!confirm("Are you sure you want to delete this booking? This cannot be undone.")) return;
+    if (!confirm("Are you sure you want to delete this booking?")) return;
     try {
         const res = await fetch("/api/bookings/" + id, { method: "DELETE" });
         if (res.ok) loadBookings();
-    } catch (err) {
-        console.error("Delete error:", err);
-    }
+    } catch (err) { console.error("Delete error:", err); }
 }
 
 // 4. Search and Filter Logic
@@ -169,19 +206,14 @@ function filterBookings() {
 
     const filtered = bookingsData.filter(b => {
         const matchSearch = b.name.toLowerCase().includes(search) || (b.bookingId && b.bookingId.toLowerCase().includes(search)) || b.phone.includes(search);
-        
-        let matchMonth = true;
-        let matchYear = true;
-
+        let matchMonth = true, matchYear = true;
         if (b.dateFrom) {
             const parts = b.dateFrom.split("-");
             if (month) matchMonth = parts[1] === month;
             if (year) matchYear = parts[0] === year;
         }
-
         return matchSearch && matchMonth && matchYear;
     });
-
     displayBookings(filtered);
 }
 
@@ -198,13 +230,12 @@ function generateYears() {
     select.innerHTML = `<option value="">Year</option>`;
     for (let i = currentYear - 2; i <= currentYear + 5; i++) {
         const option = document.createElement("option");
-        option.value = i;
-        option.text = i;
+        option.value = i; option.text = i;
         select.appendChild(option);
     }
 }
 
-// 7. BILL GENERATOR
+// 7. FULL BILL GENERATOR (Internal View & Printing)
 function generateBill(id) {
     const booking = bookingsData.find(b => b._id === id);
     if (!booking) return;
@@ -316,7 +347,7 @@ function generateBill(id) {
     win.document.close();
 }
 
-// 8. Initialization on Page Load
+// 8. Initialization
 document.addEventListener("DOMContentLoaded", () => {
     generateYears();
     loadBookings();
