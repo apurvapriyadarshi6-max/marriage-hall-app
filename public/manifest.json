@@ -1,0 +1,15 @@
+{
+  "name": "Pandey Marriage Hall",
+  "short_name": "PMH Manager",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#b01e23",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3656/3656842.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

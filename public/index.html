@@ -6,6 +6,12 @@
     <title>Dashboard | Pandey Marriage Hall</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="/manifest.json">
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js");
+  }
+</script>
     <style>
         :root {
             --pmh-red: #b01e23;
