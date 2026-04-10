@@ -77,7 +77,6 @@
             outline: none;
             border-color: var(--info);
             background: #fff;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
 
         .filters {
@@ -97,7 +96,6 @@
             cursor: pointer;
         }
 
-        /* --- Stylish Reset Button --- */
         .btn-reset {
             background: rgba(176, 30, 35, 0.1);
             border: none;
@@ -155,7 +153,6 @@
 
         .price-info .bal { color: var(--danger); font-weight: 800; font-size: 1rem; }
 
-        /* --- Action Button Group --- */
         .btn-group { display: flex; gap: 8px; }
 
         .action-btn {
@@ -172,7 +169,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* Button Specific Colors */
         .btn-pay { background: var(--success); color: white; }
         .btn-edit { background: var(--info); color: white; }
         .btn-bill { background: var(--pmh-dark); color: white; }
@@ -180,7 +176,6 @@
 
         .action-btn:active { transform: scale(0.9); opacity: 0.8; }
 
-        /* --- Desktop View --- */
         .desktop-table { display: none; }
 
         @media (min-width: 768px) {
@@ -211,21 +206,44 @@
             transition: 0.3s;
         }
 
-        .nav-item i { font-size: 1.5rem; }
-        .nav-item span { font-size: 0.75rem; font-weight: 600; margin-top: 4px; }
+        .nav-item i { font-size: 1.5rem; transition: transform 0.2s; }
+        .nav-item span { font-size: 0.7rem; font-weight: 600; margin-top: 2px; }
         .nav-item.active { color: var(--pmh-red); }
 
-        /* --- Floating New Button --- */
+        /* --- Floating New Button (FAB) FIXED --- */
         .fab {
             background: linear-gradient(135deg, var(--pmh-red), var(--pmh-red-dark));
             color: white;
-            width: 60px; height: 60px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin-top: -40px; border: 5px solid white;
-            box-shadow: 0 8px 20px rgba(176, 30, 35, 0.4);
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -30px; 
+            border: 4px solid white;
+            box-shadow: 0 4px 12px rgba(176, 30, 35, 0.4);
             transition: 0.3s;
         }
-        .fab:active { transform: translateY(5px); box-shadow: 0 4px 10px rgba(176, 30, 35, 0.4); }
+        
+        .fab-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        
+        .fab i { font-size: 1.8rem !important; color: white !important; margin: 0; }
+        
+        /* The span inside the FAB nav-item */
+        .nav-item:nth-child(3) span {
+            margin-top: 5px;
+            color: #bbb; /* Standard color to match Dashboard */
+        }
+
+        .nav-item:active .fab { transform: scale(0.9) translateY(5px); }
+
     </style>
 </head>
 <body>
@@ -285,10 +303,16 @@
             <i class="ri-book-read-fill"></i>
             <span>Bookings</span>
         </a>
+        
         <a href="new-booking.html" class="nav-item">
-            <div class="fab"><i class="ri-add-large-line"></i></div>
+            <div class="fab">
+                <div class="fab-content">
+                    <i class="ri-add-line"></i>
+                </div>
+            </div>
             <span>New</span>
         </a>
+
         <a href="calendar.html" class="nav-item">
             <i class="ri-calendar-todo-line"></i>
             <span>Calendar</span>
