@@ -135,7 +135,7 @@ async function quickPay(id, currentPaid, total) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
                 paid: newPaidTotal,
-                remaining: total - newPaidTotal 
+                remaining: Math.round(total - newPaidTotal)
             })
         });
 

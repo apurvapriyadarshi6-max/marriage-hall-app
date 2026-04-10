@@ -5,18 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Manage Bookings | Pandey Marriage Hall</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <style>
         :root {
             --pmh-red: #b01e23;
             --bg-gray: #f4f7f6;
+            --pmh-dark: #203a43;
         }
 
         body {
             background-color: var(--bg-gray);
             margin: 0;
-            padding-bottom: 90px; /* Space for Bottom Nav */
+            padding-bottom: 90px;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* --- App Header --- */
@@ -30,6 +31,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .app-header h2 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; }
@@ -79,10 +81,8 @@
             font-size: 14px;
         }
 
-        /* --- Booking Cards (Mobile View) --- */
-        .booking-list {
-            padding: 10px;
-        }
+        /* --- Booking Cards --- */
+        .booking-list { padding: 10px; }
 
         .booking-card {
             background: white;
@@ -91,11 +91,14 @@
             margin-bottom: 15px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             border-left: 5px solid #ccc;
+            animation: fadeIn 0.3s ease-in;
         }
 
-        .booking-card.status-paid { border-left-color: #27ae60; }
-        .booking-card.status-partial { border-left-color: #f39c12; }
-        .booking-card.status-pending { border-left-color: #e74c3c; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .status-paid { border-left-color: #27ae60; }
+        .status-partial { border-left-color: #f39c12; }
+        .status-pending { border-left-color: #e74c3c; }
 
         .card-header {
             display: flex;
@@ -105,8 +108,7 @@
         }
 
         .card-header .name { font-weight: bold; font-size: 1.1rem; color: #333; }
-        .card-header .id { font-size: 0.8rem; color: #999; }
-
+        
         .card-body {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -116,7 +118,8 @@
             margin-bottom: 15px;
         }
 
-        .card-body div i { margin-right: 5px; color: var(--pmh-red); }
+        .card-body div { display: flex; align-items: center; }
+        .card-body i { margin-right: 8px; color: var(--pmh-red); font-size: 1rem; }
 
         .card-footer {
             display: flex;
@@ -124,16 +127,11 @@
             align-items: center;
             border-top: 1px solid #f0f0f0;
             padding-top: 12px;
-            gap: 5px;
         }
 
-        .price-info { text-align: left; }
-        .price-info .bal { color: #e74c3c; font-weight: bold; display: block; }
+        .price-info .bal { color: #e74c3c; font-weight: bold; }
 
-        .btn-group {
-            display: flex;
-            gap: 5px;
-        }
+        .btn-group { display: flex; gap: 8px; }
 
         .action-btn {
             width: 40px;
@@ -145,26 +143,23 @@
             border: none;
             cursor: pointer;
             font-size: 1.2rem;
-            transition: 0.2s;
         }
 
-        .btn-pay { background: #fff3cd; color: #856404; }
         .btn-edit { background: #cfe2ff; color: #084298; }
-        .btn-bill { background: #d1e7dd; color: #0f5132; }
         .btn-del { background: #f8d7da; color: #842029; }
 
-        /* --- Hide Table on Mobile / Show on Desktop --- */
+        /* --- Desktop View --- */
         .desktop-table { display: none; }
 
         @media (min-width: 768px) {
             .booking-list { display: none; }
             .desktop-table { display: block; padding: 20px; }
-            .table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+            .table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
             .table th, .table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-            .table th { background: #f8f9fa; color: #666; }
+            .table th { background: #f8f9fa; font-weight: 600; color: #555; }
         }
 
-        /* --- Bottom Nav --- */
+        /* --- Nav --- */
         .bottom-nav {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -172,7 +167,7 @@
             display: flex;
             justify-content: space-around;
             padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
             z-index: 1000;
         }
 
@@ -183,14 +178,15 @@
         }
 
         .nav-item i { font-size: 1.4rem; }
-        .nav-item span { font-size: 0.7rem; margin-top: 2px; }
+        .nav-item span { font-size: 0.7rem; font-weight: 500; margin-top: 3px; }
         .nav-item.active { color: var(--pmh-red); }
 
         .fab {
             background: var(--pmh-red); color: white;
-            width: 50px; height: 50px; border-radius: 50%;
+            width: 55px; height: 55px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            margin-top: -30px; border: 4px solid white;
+            margin-top: -35px; border: 4px solid white;
+            box-shadow: 0 4px 12px rgba(176, 30, 35, 0.3);
         }
     </style>
 </head>
@@ -198,13 +194,13 @@
 
     <header class="app-header">
         <h2>BOOKING MANAGER</h2>
-        <i class="ri-printer-line" onclick="window.print()" style="font-size: 1.4rem;"></i>
+        <i class="ri-printer-line" onclick="window.print()" style="font-size: 1.4rem; cursor: pointer;"></i>
     </header>
 
     <div class="search-section">
         <div class="search-bar">
             <i class="ri-search-line"></i>
-            <input type="text" id="searchInput" placeholder="Search by name, phone or ID..." onkeyup="filterBookings()">
+            <input type="text" id="searchInput" placeholder="Search customer name..." onkeyup="filterBookings()">
         </div>
         <div class="filters">
             <select id="monthFilter" onchange="filterBookings()">
@@ -214,16 +210,15 @@
                 <option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option>
                 <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
             </select>
-            <select id="yearFilter" onchange="filterBookings()">
-                </select>
-            <button onclick="window.location.reload()" style="background:none; border:none; color:var(--pmh-red); font-weight:bold;">Reset</button>
+            <select id="yearFilter" onchange="filterBookings()"></select>
+            <button onclick="window.location.reload()" style="background:none; border:none; color:var(--pmh-red); font-weight:bold; cursor: pointer;">Reset</button>
         </div>
     </div>
 
     <div id="bookingList" class="booking-list">
-        <div style="text-align: center; color: #999; padding: 50px;">
-            <i class="ri-loader-4-line ri-spin" style="font-size: 2rem;"></i>
-            <p>Loading bookings...</p>
+        <div style="text-align: center; color: #999; padding: 60px 20px;">
+            <i class="ri-loader-4-line ri-spin" style="font-size: 2.5rem; color: var(--pmh-red);"></i>
+            <p style="margin-top: 15px; font-weight: 500;">Loading your bookings...</p>
         </div>
     </div>
 
@@ -232,17 +227,15 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Customer</th>
                         <th>Phone</th>
-                        <th>Dates</th>
+                        <th>Event Date</th>
+                        <th>Total</th>
                         <th>Balance</th>
-                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="bookingTable">
-                    </tbody>
+                <tbody id="bookingTable"></tbody>
             </table>
         </div>
     </div>
@@ -266,6 +259,6 @@
         </a>
     </nav>
 
-    <script src="bookings.js"></script>
+    <script src="/bookings.js"></script>
 </body>
 </html>
