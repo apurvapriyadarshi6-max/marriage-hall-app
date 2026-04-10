@@ -8,8 +8,13 @@
     <style>
         :root {
             --pmh-red: #b01e23;
+            --pmh-red-dark: #8a171b;
             --bg-gray: #f4f7f6;
             --pmh-dark: #203a43;
+            --success: #27ae60;
+            --info: #3498db;
+            --warning: #f39c12;
+            --danger: #e74c3c;
         }
 
         body {
@@ -36,7 +41,7 @@
 
         .app-header h2 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; }
 
-        /* --- Search & Filter Bar --- */
+        /* --- Search & Filter Section --- */
         .search-section {
             padding: 15px;
             background: white;
@@ -46,7 +51,7 @@
 
         .search-bar {
             position: relative;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .search-bar i {
@@ -60,147 +65,180 @@
         .search-bar input {
             width: 100%;
             padding: 12px 12px 12px 40px;
-            border: 1px solid #eee;
-            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
             background: #f9f9f9;
             box-sizing: border-box;
             font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--info);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
 
         .filters {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
 
         .filters select {
             flex: 1;
             padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #eee;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
             background: #fff;
             font-size: 14px;
+            color: #444;
+            cursor: pointer;
         }
+
+        /* --- Stylish Reset Button --- */
+        .btn-reset {
+            background: rgba(176, 30, 35, 0.1);
+            border: none;
+            color: var(--pmh-red);
+            font-weight: bold;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-reset:active { transform: scale(0.95); background: rgba(176, 30, 35, 0.2); }
 
         /* --- Booking Cards --- */
         .booking-list { padding: 10px; }
 
         .booking-card {
             background: white;
-            border-radius: 15px;
-            padding: 15px;
+            border-radius: 18px;
+            padding: 18px;
             margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border-left: 5px solid #ccc;
-            animation: fadeIn 0.3s ease-in;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border-left: 6px solid #ccc;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        .status-paid { border-left-color: #27ae60; }
-        .status-partial { border-left-color: #f39c12; }
-        .status-pending { border-left-color: #e74c3c; }
+        .status-paid { border-left-color: var(--success); }
+        .status-partial { border-left-color: var(--warning); }
+        .status-pending { border-left-color: var(--danger); }
 
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-
-        .card-header .name { font-weight: bold; font-size: 1.1rem; color: #333; }
+        .card-header .name { font-weight: 700; font-size: 1.15rem; color: var(--pmh-dark); margin-bottom: 4px; }
+        .card-header .id { font-size: 0.8rem; color: #888; font-weight: 500; }
         
         .card-body {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
             font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 15px;
+            color: #555;
+            margin: 15px 0;
         }
 
         .card-body div { display: flex; align-items: center; }
-        .card-body i { margin-right: 8px; color: var(--pmh-red); font-size: 1rem; }
+        .card-body i { margin-right: 8px; color: var(--pmh-red); font-size: 1.1rem; }
 
         .card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid #f0f0f0;
-            padding-top: 12px;
+            border-top: 1px solid #f1f1f1;
+            padding-top: 15px;
         }
 
-        .price-info .bal { color: #e74c3c; font-weight: bold; }
+        .price-info .bal { color: var(--danger); font-weight: 800; font-size: 1rem; }
 
+        /* --- Action Button Group --- */
         .btn-group { display: flex; gap: 8px; }
 
         .action-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             border: none;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        .btn-edit { background: #cfe2ff; color: #084298; }
-        .btn-del { background: #f8d7da; color: #842029; }
+        /* Button Specific Colors */
+        .btn-pay { background: var(--success); color: white; }
+        .btn-edit { background: var(--info); color: white; }
+        .btn-bill { background: var(--pmh-dark); color: white; }
+        .btn-del { background: var(--danger); color: white; }
+
+        .action-btn:active { transform: scale(0.9); opacity: 0.8; }
 
         /* --- Desktop View --- */
         .desktop-table { display: none; }
 
         @media (min-width: 768px) {
             .booking-list { display: none; }
-            .desktop-table { display: block; padding: 20px; }
-            .table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-            .table th, .table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-            .table th { background: #f8f9fa; font-weight: 600; color: #555; }
+            .desktop-table { display: block; padding: 25px; }
+            .table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+            .table th { background: #f8f9fa; padding: 18px; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #eee; }
+            .table td { padding: 18px; border-bottom: 1px solid #f1f1f1; }
+            .action-btn { width: 36px; height: 36px; font-size: 1.1rem; }
         }
 
-        /* --- Nav --- */
+        /* --- Bottom Nav Bar --- */
         .bottom-nav {
             position: fixed;
             bottom: 0; left: 0; right: 0;
             background: white;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -2px 15px rgba(0,0,0,0.1);
+            padding: 12px 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
             z-index: 1000;
         }
 
         .nav-item {
-            text-decoration: none; color: #999;
+            text-decoration: none; color: #bbb;
             text-align: center; flex: 1;
             display: flex; flex-direction: column; align-items: center;
+            transition: 0.3s;
         }
 
-        .nav-item i { font-size: 1.4rem; }
-        .nav-item span { font-size: 0.7rem; font-weight: 500; margin-top: 3px; }
+        .nav-item i { font-size: 1.5rem; }
+        .nav-item span { font-size: 0.75rem; font-weight: 600; margin-top: 4px; }
         .nav-item.active { color: var(--pmh-red); }
 
+        /* --- Floating New Button --- */
         .fab {
-            background: var(--pmh-red); color: white;
-            width: 55px; height: 55px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--pmh-red), var(--pmh-red-dark));
+            color: white;
+            width: 60px; height: 60px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            margin-top: -35px; border: 4px solid white;
-            box-shadow: 0 4px 12px rgba(176, 30, 35, 0.3);
+            margin-top: -40px; border: 5px solid white;
+            box-shadow: 0 8px 20px rgba(176, 30, 35, 0.4);
+            transition: 0.3s;
         }
+        .fab:active { transform: translateY(5px); box-shadow: 0 4px 10px rgba(176, 30, 35, 0.4); }
     </style>
 </head>
 <body>
 
     <header class="app-header">
         <h2>BOOKING MANAGER</h2>
-        <i class="ri-printer-line" onclick="window.print()" style="font-size: 1.4rem; cursor: pointer;"></i>
+        <i class="ri-printer-line" onclick="window.print()" style="font-size: 1.5rem; cursor: pointer;"></i>
     </header>
 
     <div class="search-section">
         <div class="search-bar">
             <i class="ri-search-line"></i>
-            <input type="text" id="searchInput" placeholder="Search customer name..." onkeyup="filterBookings()">
+            <input type="text" id="searchInput" placeholder="Search by name or mobile..." onkeyup="filterBookings()">
         </div>
         <div class="filters">
             <select id="monthFilter" onchange="filterBookings()">
@@ -211,38 +249,36 @@
                 <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
             </select>
             <select id="yearFilter" onchange="filterBookings()"></select>
-            <button onclick="window.location.reload()" style="background:none; border:none; color:var(--pmh-red); font-weight:bold; cursor: pointer;">Reset</button>
+            <button class="btn-reset" onclick="window.location.reload()">Reset</button>
         </div>
     </div>
 
     <div id="bookingList" class="booking-list">
-        <div style="text-align: center; color: #999; padding: 60px 20px;">
-            <i class="ri-loader-4-line ri-spin" style="font-size: 2.5rem; color: var(--pmh-red);"></i>
-            <p style="margin-top: 15px; font-weight: 500;">Loading your bookings...</p>
+        <div style="text-align: center; color: #999; padding: 80px 20px;">
+            <i class="ri-loader-5-line ri-spin" style="font-size: 3rem; color: var(--pmh-red);"></i>
+            <p style="margin-top: 20px; font-weight: 600; font-size: 1.1rem; color: #666;">Syncing your bookings...</p>
         </div>
     </div>
 
     <div class="desktop-table">
-        <div class="table-wrapper">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Customer</th>
-                        <th>Phone</th>
-                        <th>Event Date</th>
-                        <th>Total</th>
-                        <th>Balance</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="bookingTable"></tbody>
-            </table>
-        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Phone</th>
+                    <th>Event Date</th>
+                    <th>Total (₹)</th>
+                    <th>Balance (₹)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="bookingTable"></tbody>
+        </table>
     </div>
 
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item">
-            <i class="ri-dashboard-3-line"></i>
+            <i class="ri-home-5-line"></i>
             <span>Home</span>
         </a>
         <a href="bookings.html" class="nav-item active">
@@ -250,11 +286,11 @@
             <span>Bookings</span>
         </a>
         <a href="new-booking.html" class="nav-item">
-            <div class="fab"><i class="ri-add-line"></i></div>
+            <div class="fab"><i class="ri-add-large-line"></i></div>
             <span>New</span>
         </a>
         <a href="calendar.html" class="nav-item">
-            <i class="ri-calendar-event-line"></i>
+            <i class="ri-calendar-todo-line"></i>
             <span>Calendar</span>
         </a>
     </nav>
