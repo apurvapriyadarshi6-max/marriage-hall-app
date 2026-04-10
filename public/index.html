@@ -236,9 +236,6 @@
         // Simple display for current date
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-IN', options);
-        if (!/Android|iPhone/i.test(navigator.userAgent)) {
-    document.body.innerHTML = "<h1>This app only works on authorized mobile devices.</h1>";
-}
     </script>
     <script src="dashboard.js"></script>
 </body>
