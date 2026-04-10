@@ -1,3 +1,11 @@
+app.use((req, res, next) => {
+    const secretKey = "Pandey786"; // Choose your own secret code
+    if (req.query.key === secretKey || req.path.includes('api')) {
+        next();
+    } else {
+        res.status(403).send("Unauthorized Access");
+    }
+});
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
