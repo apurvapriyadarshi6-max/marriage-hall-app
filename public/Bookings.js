@@ -9,7 +9,7 @@ let bookingsData = [];
 const getApiBaseUrl = () => {
     return (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
         ? "" // Local relative path
-        : "https://pandey-marriage-hall.onrender.com"; // Production URL
+        : "https://pmh-personal.onrender.com"; // Production URL
 };
 
 const API_URL = `${getApiBaseUrl()}/api/bookings`;
