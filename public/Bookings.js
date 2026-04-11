@@ -2,12 +2,12 @@
  * Pandey Marriage Hall - Unified Booking Manager Logic
  * Fixed: Relative API paths to prevent CORS/MIME errors.
  * Fixed: No-Minus logic for financial totals.
+ * Included: Full Terms & Conditions and Receipt Layout.
  */
 
 let bookingsData = [];
 
 // CRITICAL FIX: Use a relative path so it works on any hosting (Render, Local, etc.)
-// This prevents the browser from looking for the old "pmh-personal" site.
 const API_URL = "/api/bookings";
 
 /**
@@ -38,7 +38,6 @@ function shareOnWhatsApp(id) {
     const end = formatDateDisplay(b.dateTo);
     const dateRange = (b.dateTo && b.dateTo !== b.dateFrom) ? `${start} to ${end}` : start;
     
-    // NO-MINUS FIX: Ensure balance shown in WA isn't negative
     const displayBalance = Math.max(0, b.remaining || 0);
 
     const message = `*PANDEY MARRIAGE HALL - RECEIPT*%0A------------------------------%0A*Customer:* ${b.name}%0A*Event:* ${b.occasion}%0A*Dates:* ${dateRange}%0A------------------------------%0A*Total Amount:* ₹${b.total}%0A*Paid Amount:* ₹${b.paid}%0A*Remaining Balance:* ₹${displayBalance}%0A------------------------------%0A_Thank you for choosing Pandey Marriage Hall!_`;
@@ -70,9 +69,6 @@ async function loadBookings() {
     }
 }
 
-/**
- * Renders the UI and calculates Top Summary Stats
- */
 function displayBookings(data) {
     const table = document.getElementById("bookingTable");
     const list = document.getElementById("bookingList"); 
@@ -94,9 +90,7 @@ function displayBookings(data) {
     }
 
     data.forEach(b => {
-        // NO-MINUS FIX: Prevent negative numbers on dashboard
         const displayBalance = Math.max(0, b.remaining || 0);
-
         runningCollected += parseFloat(b.paid) || 0;
         runningDue += displayBalance;
 
@@ -104,12 +98,9 @@ function displayBookings(data) {
         const end = formatDateDisplay(b.dateTo);
         const dateRangeText = (b.dateTo && b.dateTo !== b.dateFrom) ? `${start} — ${end}` : start;
         
-        let status = "Pending";
-        if (displayBalance <= 0) status = "Paid";
-        else if (b.paid > 0) status = "Partial";
+        let status = displayBalance <= 0 ? "Paid" : (b.paid > 0 ? "Partial" : "Pending");
         const statusClass = status.toLowerCase();
 
-        // Mobile Card Render
         if (list) {
             const card = document.createElement("div");
             card.className = `booking-card status-${statusClass}`;
@@ -144,7 +135,6 @@ function displayBookings(data) {
             list.appendChild(card);
         }
 
-        // Desktop Table Render
         if (table) {
             const row = document.createElement("tr");
             row.innerHTML = `
@@ -190,39 +180,23 @@ function quickPay(id, currentPaid, total, name) {
     document.getElementById("confirmPaymentBtn").onclick = async () => {
         const amt = parseFloat(input.value);
         if (!amt || amt <= 0) return alert("Enter valid amount");
-
         try {
             const res = await fetch(`${API_URL}/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ paid: parseFloat(currentPaid) + amt })
             });
-
-            if (res.ok) {
-                closeModal();
-                loadBookings();
-            }
+            if (res.ok) { closeModal(); loadBookings(); }
         } catch (err) { alert("Payment failed"); }
     };
 }
 
-function closeModal() {
-    document.getElementById("paymentModal").style.display = "none";
-}
-
-async function deleteBooking(id) {
-    if (!confirm("Delete booking?")) return;
-    try {
-        const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-        if (res.ok) loadBookings();
-    } catch (err) { console.error("Delete failed"); }
-}
+function closeModal() { document.getElementById("paymentModal").style.display = "none"; }
 
 function filterBookings() {
     const search = document.getElementById("searchInput").value.toLowerCase();
     const month = document.getElementById("monthFilter").value;
     const year = document.getElementById("yearFilter").value;
-
     const filtered = bookingsData.filter(b => {
         const matchSearch = b.name.toLowerCase().includes(search) || b.phone.includes(search);
         let matchMonth = true, matchYear = true;
@@ -236,8 +210,14 @@ function filterBookings() {
     displayBookings(filtered);
 }
 
-function editBooking(id) {
-    window.location.href = `new-booking.html?id=${id}`;
+function editBooking(id) { window.location.href = `new-booking.html?id=${id}`; }
+
+async function deleteBooking(id) {
+    if (!confirm("Delete booking?")) return;
+    try {
+        const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        if (res.ok) loadBookings();
+    } catch (err) { console.error("Delete failed"); }
 }
 
 function generateYears() {
@@ -252,7 +232,7 @@ function generateYears() {
     }
 }
 
-// --- RECEIPT GENERATOR ---
+// --- RECEIPT GENERATOR (WITH ALL TERMS & CONDITIONS) ---
 
 function generateBill(id) {
     const b = bookingsData.find(item => item._id === id);
@@ -294,28 +274,33 @@ function generateBill(id) {
                 <div class="address">पुरानी बाजार – शिवपुरी कॉलोनी, गोह | औरंगाबाद, बिहार</div>
                 <div class="address">मो: +91 9771592296</div>
             </div>
+
             <div class="info-grid">
                 <div class="info-box">
                     <div><b>Customer:</b> ${b.name}</div>
                     <div><b>Phone:</b> ${b.phone}</div>
+                    <div><b>Address:</b> ${b.address || "-"}</div>
                 </div>
                 <div class="info-box" style="text-align: right;">
                     <div><b>Booking ID:</b> ${b.bookingId || "-"}</div>
-                    <div><b>Date:</b> ${new Date().toLocaleDateString('en-IN')}</div>
+                    <div><b>Receipt Date:</b> ${new Date().toLocaleDateString('en-IN')}</div>
                 </div>
             </div>
+
             <table>
                 <thead>
                     <tr><th>Description</th><th>Details</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Event</td><td>${b.occasion || "-"}</td></tr>
-                    <tr><td>Dates</td><td>${dateRange}</td></tr>
+                    <tr><td>Event Type / Occasion</td><td><b>${b.occasion || "-"}</b></td></tr>
+                    <tr><td>Event Date(s)</td><td>${dateRange}</td></tr>
+                    <tr><td>Timings</td><td>${b.timeFrom || "-"} to ${b.timeTo || "-"}</td></tr>
                 </tbody>
             </table>
+
             <table>
                 <thead>
-                    <tr><th>Total</th><th>Paid</th><th>Balance</th></tr>
+                    <tr><th>Total Amount</th><th>Paid Advance</th><th>Remaining Balance</th></tr>
                 </thead>
                 <tbody>
                     <tr class="total-row">
@@ -325,11 +310,29 @@ function generateBill(id) {
                     </tr>
                 </tbody>
             </table>
-            <div class="sig-box">
-                <div class="sig">Authorized Signatory</div>
+
+            <div class="terms">
+                <h3>नियम एवं शर्तें (Terms & Conditions):</h3>
+                <ol>
+                    <li>हॉल में लाए गए सभी सामान की जिम्मेदारी स्वयं ग्राहक की होगी।</li>
+                    <li>बुकिंग के समय जमा किया गया अग्रिम पैसा (Advance) किसी भी स्थिति में वापस नहीं होगा।</li>
+                    <li>हॉल की संपत्ति को किसी भी प्रकार का नुकसान होने पर ग्राहक को उसका पूरा हर्जाना देना होगा।</li>
+                    <li>सरकारी नियमों के अनुसार रात 10 बजे के बाद डीजे (DJ) पूर्णतः प्रतिबंधित है।</li>
+                    <li>हॉल में किसी भी प्रकार की अवैध गतिविधि या नशीली वस्तुओं का सेवन वर्जित है।</li>
+                    <li>कार्यक्रम के निर्धारित समय के पश्चात हॉल खाली करना अनिवार्य होगा।</li>
+                    <li>पार्किंग अपने जोखिम पर करें, प्रबंधन किसी भी नुकसान के लिए जिम्मेदार नहीं होगा।</li>
+                </ol>
             </div>
+
+            <div class="sig-box">
+                <div class="sig">Customer Signature</div>
+                <div class="sig">Authorized Signatory<br><small>Pandey Marriage Hall</small></div>
+            </div>
+
             <div style="text-align: center; margin-top: 40px;" class="no-print">
-                <button onclick="window.print()" style="padding: 12px 25px; background: #333; color: #fff; border: none; border-radius: 5px;">PRINT</button>
+                <button onclick="window.print()" style="padding: 12px 25px; cursor: pointer; background: #333; color: #fff; border: none; border-radius: 5px; font-weight: bold;">
+                    PRINT INVOICE
+                </button>
             </div>
         </body>
         </html>
