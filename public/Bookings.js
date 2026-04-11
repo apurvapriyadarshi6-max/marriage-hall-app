@@ -1,17 +1,13 @@
 /**
  * Pandey Marriage Hall - Unified Booking Manager Logic
- * Handles dynamic data loading, filtering, and customer financials with "No-Minus" protection.
+ * Fixed: Relative API paths to prevent CORS/MIME errors.
+ * Fixed: No-Minus logic for financial totals.
  */
 
 let bookingsData = [];
 
-// 1. DYNAMIC API URL
-// USE THIS UNIFIED VERSION
-const getApiBaseUrl = () => {
-    // This empty string tells the browser to stay on the SAME server
-    return ""; 
-};
-
+// CRITICAL FIX: Use a relative path so it works on any hosting (Render, Local, etc.)
+// This prevents the browser from looking for the old "pmh-personal" site.
 const API_URL = "/api/bookings";
 
 /**
@@ -42,7 +38,7 @@ function shareOnWhatsApp(id) {
     const end = formatDateDisplay(b.dateTo);
     const dateRange = (b.dateTo && b.dateTo !== b.dateFrom) ? `${start} to ${end}` : start;
     
-    // NO-MINUS FIX for WhatsApp
+    // NO-MINUS FIX: Ensure balance shown in WA isn't negative
     const displayBalance = Math.max(0, b.remaining || 0);
 
     const message = `*PANDEY MARRIAGE HALL - RECEIPT*%0A------------------------------%0A*Customer:* ${b.name}%0A*Event:* ${b.occasion}%0A*Dates:* ${dateRange}%0A------------------------------%0A*Total Amount:* ₹${b.total}%0A*Paid Amount:* ₹${b.paid}%0A*Remaining Balance:* ₹${displayBalance}%0A------------------------------%0A_Thank you for choosing Pandey Marriage Hall!_`;
@@ -98,7 +94,7 @@ function displayBookings(data) {
     }
 
     data.forEach(b => {
-        // NO-MINUS FIX: Ensure we never calculate or show negative balances
+        // NO-MINUS FIX: Prevent negative numbers on dashboard
         const displayBalance = Math.max(0, b.remaining || 0);
 
         runningCollected += parseFloat(b.paid) || 0;
@@ -128,7 +124,6 @@ function displayBookings(data) {
                 <div class="card-body">
                     <div><i class="ri-phone-line"></i> ${b.phone}</div>
                     <div><i class="ri-calendar-event-line"></i> ${dateRangeText}</div>
-                    
                     <div style="font-weight: 600; color: var(--pmh-dark); margin-top: 5px;">
                         <i class="ri-money-rupee-circle-fill"></i> Total Amount: ₹${b.total}
                     </div>
@@ -173,7 +168,6 @@ function displayBookings(data) {
         }
     });
 
-    // Update Top Summary Bar (Currency Formatting en-IN)
     const f = new Intl.NumberFormat('en-IN');
     if (collectedEl) collectedEl.innerText = "₹" + f.format(runningCollected);
     if (dueEl) dueEl.innerText = "₹" + f.format(runningDue);
@@ -183,21 +177,17 @@ function displayBookings(data) {
 
 function quickPay(id, currentPaid, total, name) {
     const rawRemaining = total - currentPaid;
-    const displayBalance = Math.max(0, rawRemaining); // NO-MINUS FIX
+    const displayBalance = Math.max(0, rawRemaining);
     
     const modal = document.getElementById("paymentModal");
-    const nameTag = document.getElementById("modalCustomerName");
-    const balanceText = document.getElementById("modalBalanceText");
-    const confirmBtn = document.getElementById("confirmPaymentBtn");
-    const input = document.getElementById("paymentInput");
-
     modal.style.display = "flex";
-    if(nameTag) nameTag.innerText = name;
-    if(balanceText) balanceText.innerText = `Remaining Due: ₹${displayBalance}`;
+    document.getElementById("modalCustomerName").innerText = name;
+    document.getElementById("modalBalanceText").innerText = `Remaining Due: ₹${displayBalance}`;
+    const input = document.getElementById("paymentInput");
     input.value = "";
     setTimeout(() => input.focus(), 100);
 
-    confirmBtn.onclick = async () => {
+    document.getElementById("confirmPaymentBtn").onclick = async () => {
         const amt = parseFloat(input.value);
         if (!amt || amt <= 0) return alert("Enter valid amount");
 
@@ -234,9 +224,7 @@ function filterBookings() {
     const year = document.getElementById("yearFilter").value;
 
     const filtered = bookingsData.filter(b => {
-        const matchSearch = b.name.toLowerCase().includes(search) || 
-                            (b.bookingId && b.bookingId.toLowerCase().includes(search)) || 
-                            b.phone.includes(search);
+        const matchSearch = b.name.toLowerCase().includes(search) || b.phone.includes(search);
         let matchMonth = true, matchYear = true;
         if (b.dateFrom) {
             const parts = b.dateFrom.split("-");
@@ -270,7 +258,7 @@ function generateBill(id) {
     const b = bookingsData.find(item => item._id === id);
     if (!b) return;
     
-    const displayBalance = Math.max(0, b.remaining || 0); // NO-MINUS FIX
+    const displayBalance = Math.max(0, b.remaining || 0);
 
     const win = window.open("", "_blank", "width=800,height=900");
     const dateRange = (b.dateTo && b.dateTo !== b.dateFrom) 
@@ -306,33 +294,28 @@ function generateBill(id) {
                 <div class="address">पुरानी बाजार – शिवपुरी कॉलोनी, गोह | औरंगाबाद, बिहार</div>
                 <div class="address">मो: +91 9771592296</div>
             </div>
-
             <div class="info-grid">
                 <div class="info-box">
                     <div><b>Customer:</b> ${b.name}</div>
                     <div><b>Phone:</b> ${b.phone}</div>
-                    <div><b>Address:</b> ${b.address || "-"}</div>
                 </div>
                 <div class="info-box" style="text-align: right;">
                     <div><b>Booking ID:</b> ${b.bookingId || "-"}</div>
-                    <div><b>Receipt Date:</b> ${new Date().toLocaleDateString('en-IN')}</div>
+                    <div><b>Date:</b> ${new Date().toLocaleDateString('en-IN')}</div>
                 </div>
             </div>
-
             <table>
                 <thead>
                     <tr><th>Description</th><th>Details</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Event Type / Occasion</td><td><b>${b.occasion || "-"}</b></td></tr>
-                    <tr><td>Event Date(s)</td><td>${dateRange}</td></tr>
-                    <tr><td>Timings</td><td>${b.timeFrom || "-"} to ${b.timeTo || "-"}</td></tr>
+                    <tr><td>Event</td><td>${b.occasion || "-"}</td></tr>
+                    <tr><td>Dates</td><td>${dateRange}</td></tr>
                 </tbody>
             </table>
-
             <table>
                 <thead>
-                    <tr><th>Total Amount</th><th>Paid Advance</th><th>Remaining Balance</th></tr>
+                    <tr><th>Total</th><th>Paid</th><th>Balance</th></tr>
                 </thead>
                 <tbody>
                     <tr class="total-row">
@@ -342,29 +325,11 @@ function generateBill(id) {
                     </tr>
                 </tbody>
             </table>
-
-            <div class="terms">
-                <h3>नियम एवं शर्तें (Terms & Conditions):</h3>
-                <ol>
-                    <li>हॉल में लाए गए सभी सामान की जिम्मेदारी स्वयं ग्राहक की होगी।</li>
-                    <li>बुकिंग के समय जमा किया गया अग्रिम पैसा (Advance) किसी भी स्थिति में वापस नहीं होगा।</li>
-                    <li>हॉल की संपत्ति को किसी भी प्रकार का नुकसान होने पर ग्राहक को उसका पूरा हर्जाना देना होगा।</li>
-                    <li>सरकारी नियमों के अनुसार रात 10 बजे के बाद डीजे (DJ) पूर्णतः प्रतिबंधित है।</li>
-                    <li>हॉल में किसी भी प्रकार की अवैध गतिविधि या नशीली वस्तुओं का सेवन वर्जित है।</li>
-                    <li>कार्यक्रम के निर्धारित समय के पश्चात हॉल खाली करना अनिवार्य होगा।</li>
-                    <li>पार्किंग अपने जोखिम पर करें, प्रबंधन किसी भी नुकसान के लिए जिम्मेदार नहीं होगा।</li>
-                </ol>
-            </div>
-
             <div class="sig-box">
-                <div class="sig">Customer Signature</div>
-                <div class="sig">Authorized Signatory<br><small>Pandey Marriage Hall</small></div>
+                <div class="sig">Authorized Signatory</div>
             </div>
-
             <div style="text-align: center; margin-top: 40px;" class="no-print">
-                <button onclick="window.print()" style="padding: 12px 25px; cursor: pointer; background: #333; color: #fff; border: none; border-radius: 5px; font-weight: bold;">
-                    PRINT INVOICE
-                </button>
+                <button onclick="window.print()" style="padding: 12px 25px; background: #333; color: #fff; border: none; border-radius: 5px;">PRINT</button>
             </div>
         </body>
         </html>
