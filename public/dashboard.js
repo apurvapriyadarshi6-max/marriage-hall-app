@@ -1,16 +1,16 @@
 /**
  * Pandey Marriage Hall - Dashboard Logic
  * Automatically switches between Local and Production APIs
+ * Includes safety checks for server responses
  */
 
 // 1. DYNAMIC URL CONFIGURATION
 const getApiUrl = () => {
     const host = window.location.hostname;
-    // If running on your laptop (localhost or 127.0.0.1)
+    // Detect if running on local laptop or Render/Netlify
     if (host === "localhost" || host === "127.0.0.1") {
-        return "/api/bookings"; // Relative path uses your local port 5000
+        return "/api/bookings"; // Uses local port 5000 via proxy/relative path
     }
-    // If running on Netlify/Internet
     return "https://pandey-marriage-hall.onrender.com/api/bookings";
 };
 
@@ -21,9 +21,19 @@ async function loadDashboard() {
 
         const res = await fetch(apiUrl);
         
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        // Handle HTTP errors (404, 500, etc)
+        if (!res.ok) {
+            throw new Error(`Server returned ${res.status}: Check if backend routes are mounted correctly.`);
+        }
         
         const bookings = await res.json();
+
+        // --- SAFETY CHECK: Ensure bookings is an Array ---
+        // This prevents the "forEach is not a function" error
+        if (!Array.isArray(bookings)) {
+            console.error("Expected Array, but received:", bookings);
+            throw new Error("Invalid data format received from server.");
+        }
 
         // Initialize counters
         let pendingBookingsCount = 0;
@@ -51,7 +61,7 @@ async function loadDashboard() {
             }).format(num);
         };
 
-        // Update UI Elements
+        // Update UI Elements with actual data
         updateElementText("totalBookings", bookings.length);
         updateElementText("pendingBookings", pendingBookingsCount);
         updateElementText("totalRevenue", formatCurrency(totalRevenue));
@@ -59,11 +69,12 @@ async function loadDashboard() {
 
     } catch (err) {
         console.error("Dashboard calculation error:", err);
-        // Show placeholders so the UI doesn't look broken
+        
+        // Show fallback indicators so user knows there is a connection issue
         updateElementText("totalBookings", "--");
         updateElementText("pendingBookings", "!");
-        updateElementText("totalRevenue", "₹0");
-        updateElementText("pendingAmount", "₹0");
+        updateElementText("totalRevenue", "Offline");
+        updateElementText("pendingAmount", "Offline");
     }
 }
 
@@ -77,5 +88,5 @@ function updateElementText(id, value) {
     }
 }
 
-// Initialize
+// Initialize when the DOM is fully loaded
 document.addEventListener("DOMContentLoaded", loadDashboard);
