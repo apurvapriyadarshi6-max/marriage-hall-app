@@ -1,10 +1,27 @@
 /**
- * Loads and calculates statistics for the Dashboard
+ * Pandey Marriage Hall - Dashboard Logic
+ * Automatically switches between Local and Production APIs
  */
+
+// 1. DYNAMIC URL CONFIGURATION
+const getApiUrl = () => {
+    const host = window.location.hostname;
+    // If running on your laptop (localhost or 127.0.0.1)
+    if (host === "localhost" || host === "127.0.0.1") {
+        return "/api/bookings"; // Relative path uses your local port 5000
+    }
+    // If running on Netlify/Internet
+    return "https://pandey-marriage-hall.onrender.com/api/bookings";
+};
+
 async function loadDashboard() {
     try {
-        const res = await fetch("/api/bookings");
-        if (!res.ok) throw new Error("Failed to fetch bookings");
+        const apiUrl = getApiUrl();
+        console.log("Fetching dashboard data from:", apiUrl);
+
+        const res = await fetch(apiUrl);
+        
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
         
         const bookings = await res.json();
 
@@ -14,25 +31,27 @@ async function loadDashboard() {
         let totalPendingAmount = 0;
 
         bookings.forEach(b => {
-            // Use parseFloat and logical OR to ensure we are adding valid numbers
             const paid = parseFloat(b.paid) || 0;
             const remaining = parseFloat(b.remaining) || 0;
 
             totalRevenue += paid;
             totalPendingAmount += remaining;
 
-            // Increment count if there is still money owed
             if (remaining > 0) {
                 pendingBookingsCount++;
             }
         });
 
-        // Helper function to format currency in Indian Rupees (INR)
+        // Professional Indian Rupee Formatter
         const formatCurrency = (num) => {
-            return "₹" + num.toLocaleString('en-IN');
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 0
+            }).format(num);
         };
 
-        // Update UI with safety checks
+        // Update UI Elements
         updateElementText("totalBookings", bookings.length);
         updateElementText("pendingBookings", pendingBookingsCount);
         updateElementText("totalRevenue", formatCurrency(totalRevenue));
@@ -40,13 +59,16 @@ async function loadDashboard() {
 
     } catch (err) {
         console.error("Dashboard calculation error:", err);
-        // Optional: Show error on UI
-        updateElementText("totalBookings", "!");
+        // Show placeholders so the UI doesn't look broken
+        updateElementText("totalBookings", "--");
+        updateElementText("pendingBookings", "!");
+        updateElementText("totalRevenue", "₹0");
+        updateElementText("pendingAmount", "₹0");
     }
 }
 
 /**
- * Utility to safely update text content
+ * Utility to safely update text content in the DOM
  */
 function updateElementText(id, value) {
     const el = document.getElementById(id);
@@ -55,5 +77,5 @@ function updateElementText(id, value) {
     }
 }
 
-// Initialize on load
-loadDashboard();
+// Initialize
+document.addEventListener("DOMContentLoaded", loadDashboard);

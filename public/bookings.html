@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Manage Bookings | Pandey Marriage Hall</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
+    
     <script>
+        // Register Service Worker for PWA Offline Support
         if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/sw.js");
+            navigator.serviceWorker.register("/sw.js").catch(err => console.log("SW registration failed", err));
         }
     </script>
+
     <style>
         :root {
             --pmh-red: #b01e23;
@@ -32,7 +36,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- App Header --- */
+        /* --- Header --- */
         .app-header {
             background: linear-gradient(to right, #0f2027, #203a43);
             color: white;
@@ -45,17 +49,15 @@
             z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-
         .app-header h2 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; }
 
-        /* --- Search & Filter Section --- */
+        /* --- Search & Filters --- */
         .search-section {
             padding: 15px;
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             margin-bottom: 10px;
         }
-
         .search-bar { position: relative; margin-bottom: 12px; }
         .search-bar i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; }
         .search-bar input {
@@ -66,11 +68,9 @@
 
         .filters { display: flex; gap: 8px; align-items: center; }
         .filters select { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #e0e0e0; background: #fff; font-size: 14px; }
+        .btn-reset { background: rgba(176, 30, 35, 0.1); border: none; color: var(--pmh-red); font-weight: bold; padding: 10px 15px; border-radius: 10px; cursor: pointer; }
 
-        .btn-reset { background: rgba(176, 30, 35, 0.1); border: none; color: var(--pmh-red); font-weight: bold; padding: 10px 15px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-        .btn-reset:active { transform: scale(0.95); background: rgba(176, 30, 35, 0.2); }
-
-        /* --- Booking Cards --- */
+        /* --- Mobile Booking Cards --- */
         .booking-list { padding: 10px; }
         .booking-card {
             background: white; border-radius: 18px; padding: 18px; margin-bottom: 15px;
@@ -84,73 +84,55 @@
         .status-pending { border-left-color: var(--danger); }
 
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .card-header .name { font-weight: 700; font-size: 1.15rem; color: var(--pmh-dark); margin-bottom: 4px; }
-        .card-header .id { font-size: 0.8rem; color: #888; font-weight: 500; }
+        .card-header .name { font-weight: 700; font-size: 1.1rem; color: var(--pmh-dark); }
+        .card-header .id { font-size: 0.75rem; color: #888; }
         
-        .card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; color: #555; margin: 15px 0; }
-        .card-body div { display: flex; align-items: center; }
-        .card-body i { margin-right: 8px; color: var(--pmh-red); font-size: 1.1rem; }
+        .badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
+        .status-paid .badge { background: #e8f5e9; color: var(--success); }
+        .status-partial .badge { background: #fff3e0; color: var(--warning); }
+        .status-pending .badge { background: #ffebee; color: var(--danger); }
 
-        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f1f1; padding-top: 15px; }
-        .price-info .bal { color: var(--danger); font-weight: 800; font-size: 1rem; }
+        .card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem; color: #555; margin: 15px 0; }
+        .card-body i { margin-right: 6px; color: var(--pmh-red); }
 
-        .btn-group { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
-        .action-btn { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; font-size: 1.2rem; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f1f1; padding-top: 12px; }
         
-        .btn-pay { background: var(--success); color: white; }
-        .btn-edit { background: var(--info); color: white; }
-        .btn-bill { background: var(--pmh-dark); color: white; }
-        .btn-del { background: var(--danger); color: white; }
-        .btn-call { background: #3498db; color: white; }
-        .btn-whatsapp { background: var(--whatsapp); color: white; }
+        /* --- Action Buttons --- */
+        .btn-group { display: flex; gap: 6px; }
+        .action-btn { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: 0.2s; color: white; }
+        .btn-pay { background: var(--success); }
+        .btn-edit { background: var(--info); }
+        .btn-bill { background: var(--pmh-dark); }
+        .btn-del { background: var(--danger); }
+        .btn-call { background: #3498db; }
+        .btn-whatsapp { background: var(--whatsapp); }
+        .action-btn:active { transform: scale(0.9); }
 
-        .action-btn:active { transform: scale(0.9); opacity: 0.8; }
-
-        /* --- ENHANCED PREMIUM MODAL STYLES --- */
+        /* --- Payment Modal --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 32, 39, 0.75);
             display: none; align-items: center; justify-content: center;
-            z-index: 2000; padding: 20px; backdrop-filter: blur(10px);
+            z-index: 2000; backdrop-filter: blur(5px);
         }
         .modal-content {
-            background: white; width: 100%; max-width: 360px; border-radius: 28px;
-            padding: 30px; text-align: center; position: relative;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            overflow: hidden;
+            background: white; width: 90%; max-width: 360px; border-radius: 24px;
+            padding: 25px; text-align: center; position: relative;
         }
-        .modal-content::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-            background: linear-gradient(to right, #27ae60, #b01e23);
-        }
-        @keyframes modalPop { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-        
-        .modal-content i.main-icon {
-            background: rgba(39, 174, 96, 0.1); width: 64px; height: 64px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 15px; font-size: 2.2rem; color: var(--success);
-        }
-
-        .modal-content h3 { margin: 5px 0; color: var(--pmh-dark); font-size: 1.4rem; font-weight: 800; }
-        .modal-customer-tag { 
-            display: inline-block; padding: 6px 16px; background: #f8f9fa; 
-            border: 1px solid #eee; border-radius: 50px; font-size: 0.9rem; 
-            color: #555; margin-bottom: 15px; font-weight: 700;
-        }
-
         .modal-content input {
-            width: 100%; padding: 18px; margin: 15px 0; border: 2px solid #eee;
-            border-radius: 18px; font-size: 1.8rem; text-align: center; box-sizing: border-box;
-            color: var(--pmh-dark); font-weight: 800; background: #fafafa;
+            width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #eee;
+            border-radius: 12px; font-size: 1.5rem; text-align: center; font-weight: bold;
         }
-        .modal-content input:focus { border-color: var(--success); outline: none; background: #fff; box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1); }
-        
-        .modal-btns { display: flex; gap: 12px; margin-top: 15px; }
-        .modal-btn { flex: 1; padding: 16px; border: none; border-radius: 16px; font-weight: 800; cursor: pointer; transition: 0.2s; font-size: 1rem; }
-        
-        .btn-confirm { background: var(--success); color: white; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3); }
-        .btn-cancel { background: #f0f0f0; color: #666; }
+
+        /* --- Desktop Table --- */
+        .desktop-table { display: none; }
+        @media (min-width: 1024px) {
+            .booking-list { display: none; }
+            .desktop-table { display: block; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; }
+            th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+            th { background: #f8f9fa; font-size: 0.85rem; color: #666; }
+        }
 
         /* --- Bottom Nav --- */
         .bottom-nav {
@@ -158,27 +140,16 @@
             display: flex; justify-content: space-around; padding: 10px 0;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 1000;
         }
-        .nav-item { text-decoration: none; color: #bbb; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
+        .nav-item { text-decoration: none; color: #bbb; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; }
         .nav-item.active { color: var(--pmh-red); }
-        .nav-item i { font-size: 1.5rem; transition: transform 0.2s; }
-        .nav-item span { font-size: 0.7rem; font-weight: 600; margin-top: 2px; }
+        .nav-item i { font-size: 1.4rem; }
+        .nav-item span { font-size: 0.65rem; font-weight: 600; margin-top: 2px; }
 
         .fab {
             background: linear-gradient(135deg, var(--pmh-red), var(--pmh-red-dark));
-            color: white; width: 55px; height: 55px; border-radius: 50%;
+            color: white; width: 50px; height: 50px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            margin-top: -30px; border: 4px solid white; box-shadow: 0 4px 12px rgba(176, 30, 35, 0.4);
-        }
-        .fab-content { display: flex; flex-direction: column; align-items: center; line-height: 1; }
-        .fab i { font-size: 1.6rem !important; }
-
-        .desktop-table { display: none; }
-        @media (min-width: 768px) {
-            .booking-list { display: none; }
-            .desktop-table { display: block; padding: 25px; }
-            .table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-            .table th { background: #f8f9fa; padding: 18px; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #eee; }
-            .table td { padding: 18px; border-bottom: 1px solid #f1f1f1; }
+            margin-top: -30px; border: 4px solid white; box-shadow: 0 4px 10px rgba(176, 30, 35, 0.3);
         }
     </style>
 </head>
@@ -186,17 +157,17 @@
 
     <header class="app-header">
         <h2>BOOKING MANAGER</h2>
-        <i class="ri-printer-line" onclick="window.print()" style="font-size: 1.5rem; cursor: pointer;"></i>
+        <i class="ri-printer-line" onclick="window.print()" style="font-size: 1.4rem; cursor: pointer;"></i>
     </header>
 
     <div class="search-section">
         <div class="search-bar">
             <i class="ri-search-line"></i>
-            <input type="text" id="searchInput" placeholder="Search customer..." onkeyup="filterBookings()">
+            <input type="text" id="searchInput" placeholder="Name, ID or Phone..." onkeyup="filterBookings()">
         </div>
         <div class="filters">
             <select id="monthFilter" onchange="filterBookings()">
-                <option value="">All Months</option>
+                <option value="">Months</option>
                 <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option>
                 <option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option>
                 <option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option>
@@ -208,41 +179,43 @@
     </div>
 
     <div id="bookingList" class="booking-list">
-        <div style="text-align: center; color: #999; padding: 80px 20px;">
+        <div style="text-align: center; color: #999; padding: 100px 20px;">
             <i class="ri-loader-5-line ri-spin" style="font-size: 3rem; color: var(--pmh-red);"></i>
-            <p>Syncing your bookings...</p>
-        </div>
-    </div>
-
-    <div id="paymentModal" class="modal-overlay">
-        <div class="modal-content">
-            <i class="ri-hand-coin-line main-icon"></i>
-            <h3>Receive Payment</h3>
-            <div id="modalCustomerName" class="modal-customer-tag">Customer Name</div>
-            <p id="modalBalanceText" style="color: var(--danger); font-weight: 800; font-size: 1.2rem; margin-bottom: 5px;"></p>
-            <p style="font-size: 0.8rem; color: #999; margin-bottom: 5px;">Enter amount to add to record</p>
-            <input type="number" id="paymentInput" placeholder="₹ 0.00" inputmode="numeric">
-            <div class="modal-btns">
-                <button class="modal-btn btn-cancel" onclick="closeModal()">Back</button>
-                <button class="modal-btn btn-confirm" id="confirmPaymentBtn">Save Pay</button>
-            </div>
+            <p>Syncing Data...</p>
         </div>
     </div>
 
     <div class="desktop-table">
-        <table class="table">
+        <table>
             <thead>
                 <tr>
-                    <th>Customer Name</th>
+                    <th>ID</th>
+                    <th>Customer</th>
                     <th>Phone</th>
-                    <th>Event Date</th>
+                    <th>Occasion</th>
+                    <th>Date</th>
                     <th>Total</th>
                     <th>Balance</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="bookingTable"></tbody>
         </table>
+    </div>
+
+    <div id="paymentModal" class="modal-overlay">
+        <div class="modal-content">
+            <i class="ri-hand-coin-line" style="font-size: 2.5rem; color: var(--success);"></i>
+            <h3>Add Payment</h3>
+            <div id="modalCustomerName" class="modal-customer-tag">...</div>
+            <p id="modalBalanceText" style="color: var(--danger); font-weight: bold;"></p>
+            <input type="number" id="paymentInput" placeholder="Enter amount" inputmode="numeric">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeModal()" style="flex:1; padding: 12px; border:none; border-radius:10px; background:#eee;">Cancel</button>
+                <button id="confirmPaymentBtn" style="flex:1; padding: 12px; border:none; border-radius:10px; background:var(--success); color:white; font-weight:bold;">Save</button>
+            </div>
+        </div>
     </div>
 
     <nav class="bottom-nav">
@@ -256,10 +229,7 @@
         </a>
         <a href="new-booking.html" class="nav-item">
             <div class="fab">
-                <div class="fab-content">
-                    <i class="ri-add-line"></i>
-                    <span>New</span>
-                </div>
+                <i class="ri-add-line"></i>
             </div>
         </a>
         <a href="calendar.html" class="nav-item">

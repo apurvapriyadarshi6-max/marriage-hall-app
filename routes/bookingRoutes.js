@@ -11,17 +11,19 @@ router.get("/", async (req, res) => {
         const { search, month, year } = req.query;
         let query = {};
 
-        // 1. Search Logic (Case-insensitive)
-        if (search) {
+        // 1. Advanced Search Logic (Name, ID, or Phone)
+        if (search && search.trim() !== "") {
+            const searchRegex = { $regex: search.trim(), $options: 'i' };
             query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { bookingId: { $regex: search, $options: 'i' } }
+                { name: searchRegex },
+                { bookingId: searchRegex },
+                { phone: searchRegex }
             ];
         }
 
         // 2. Filter Logic: specific Month and Year
-        if (month && year) {
-            // Since dateFrom is stored as "YYYY-MM-DD" string
+        if (month && year && month !== "" && year !== "") {
+            // Ensures prefix is YYYY-MM (e.g., 2026-04)
             const prefix = `${year}-${month.padStart(2, '0')}`;
             query.dateFrom = { $regex: `^${prefix}` }; 
         }
@@ -44,17 +46,25 @@ router.get("/:id", async (req, res) => {
         if (!booking) return res.status(404).json({ message: "Booking not found" });
         res.json(booking);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: "Invalid Booking ID format" });
     }
 });
 
 /**
  * @route   POST /api/bookings
- * @desc    Create a new booking
+ * @desc    Create a new booking with automatic balance calculation
  */
 router.post("/", async (req, res) => {
     try {
-        const newBooking = new Booking(req.body);
+        const { total, paid } = req.body;
+        
+        // Server-side math safety
+        const bookingData = {
+            ...req.body,
+            remaining: (parseFloat(total) || 0) - (parseFloat(paid) || 0)
+        };
+
+        const newBooking = new Booking(bookingData);
         const savedBooking = await newBooking.save();
         res.status(201).json(savedBooking);
     } catch (err) {
@@ -65,18 +75,33 @@ router.post("/", async (req, res) => {
 
 /**
  * @route   PUT /api/bookings/:id
- * @desc    Update an existing booking
+ * @desc    Update an existing booking & re-calculate balance
  */
 router.put("/:id", async (req, res) => {
     try {
+        const { total, paid } = req.body;
+        const updateData = { ...req.body };
+
+        // If prices are being updated, re-calculate remaining balance
+        if (total !== undefined || paid !== undefined) {
+            // We fetch the current record if one value is missing to ensure correct math
+            const current = await Booking.findById(req.params.id);
+            if (current) {
+                const newTotal = total !== undefined ? parseFloat(total) : current.total;
+                const newPaid = paid !== undefined ? parseFloat(paid) : current.paid;
+                updateData.remaining = newTotal - newPaid;
+            }
+        }
+
         const updatedBooking = await Booking.findByIdAndUpdate(
             req.params.id,
-            { $set: req.body },
+            { $set: updateData },
             { 
-                returnDocument: 'after', // FIXED: Modern alternative to new: true
+                returnDocument: 'after', 
                 runValidators: true 
             }
         );
+
         if (!updatedBooking) return res.status(404).json({ message: "Booking not found" });
         res.json(updatedBooking);
     } catch (err) {
@@ -86,7 +111,6 @@ router.put("/:id", async (req, res) => {
 
 /**
  * @route   DELETE /api/bookings/:id
- * @desc    Remove a booking
  */
 router.delete("/:id", async (req, res) => {
     try {
@@ -94,7 +118,7 @@ router.delete("/:id", async (req, res) => {
         if (!deleted) return res.status(404).json({ message: "Booking not found" });
         res.json({ message: "Booking deleted successfully" });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: "Could not delete booking" });
     }
 });
 

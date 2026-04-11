@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>New Booking | Pandey Marriage Hall</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <style>
         :root {
             --pmh-red: #b01e23;
@@ -17,12 +16,11 @@
         body {
             background-color: var(--bg-gray);
             margin: 0;
-            padding-bottom: 110px; /* Space for Bottom Nav */
+            padding-bottom: 110px;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- App Header --- */
         .app-header {
             background: linear-gradient(to right, #0f2027, #203a43);
             color: white;
@@ -35,7 +33,6 @@
         }
 
         .app-header h2 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; font-weight: 700; }
-
         .container { padding: 15px; max-width: 600px; margin: auto; }
 
         .form-card {
@@ -46,111 +43,42 @@
             margin-bottom: 15px;
         }
 
-        h3 {
-            font-size: 0.95rem;
-            color: var(--pmh-dark);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 10px;
-            text-transform: uppercase;
-        }
-
+        h3 { font-size: 0.95rem; color: var(--pmh-dark); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; text-transform: uppercase; }
         h3 i { color: var(--pmh-red); font-size: 1.2rem; }
 
         label { font-weight: 700; font-size: 0.8rem; color: #666; margin-bottom: 5px; display: block; }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 15px;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            font-size: 16px;
-            box-sizing: border-box;
-            background: #fafafa;
-        }
+        input, select, textarea { width: 100%; padding: 14px; margin-bottom: 15px; border: 1px solid #eee; border-radius: 12px; font-size: 16px; box-sizing: border-box; background: #fafafa; }
 
-        /* --- Modern Slide Switch --- */
-        .switch-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f9f9f9;
-        }
+        .switch-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; }
         .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ddd; transition: .3s; border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute; content: ""; height: 18px; width: 18px;
-            left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;
-        }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ddd; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--switch-green); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* --- Touch-Point UI (FIXED CLICKING) --- */
-        .touch-group {
-            background: #f8f9fa;
-            border: 1px solid #eee;
-            padding: 12px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-            margin-bottom: 15px;
-            cursor: pointer;
-        }
+        .touch-group { background: #f8f9fa; border: 1px solid #eee; padding: 12px; border-radius: 15px; display: flex; align-items: center; gap: 12px; margin-bottom: 15px; cursor: pointer; }
         .touch-group i { color: var(--pmh-red); font-size: 1.4rem; }
         .touch-group div { flex: 1; pointer-events: none; }
         .touch-group span { display: block; font-size: 0.65rem; color: #888; font-weight: 800; }
         .touch-group b { font-size: 1rem; color: var(--pmh-dark); }
-        
-        /* The hidden inputs are now triggered via script */
-        .touch-group input {
-            position: absolute; opacity: 0; width: 0; height: 0;
-        }
+        .touch-group input { position: absolute; opacity: 0; width: 0; height: 0; }
 
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        /* --- Compact Charges --- */
-        .charge-row {
-            display: grid;
-            grid-template-columns: 1fr 100px 40px;
-            gap: 8px;
-            background: #fdfdfd;
-            padding: 8px;
-            border-radius: 15px;
-            border: 1px solid #f0f0f0;
-            margin-bottom: 10px;
-            align-items: center;
-        }
+        .charge-row { display: grid; grid-template-columns: 1fr 100px 40px; gap: 8px; background: #fdfdfd; padding: 8px; border-radius: 15px; border: 1px solid #f0f0f0; margin-bottom: 10px; align-items: center; }
         .charge-row input { margin-bottom: 0; padding: 10px; font-size: 14px; background: white; border-radius: 10px; }
         .btn-mini-del { background: #fff0f0; color: #e74c3c; border: none; height: 38px; width: 38px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-add-pill { background: #fff; color: var(--pmh-dark); padding: 14px; border: 1.5px dashed #d1d1d1; width: 100%; border-radius: 15px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+        .btn-add-pill { background: #fff; color: var(--pmh-dark); padding: 14px; border: 1.5px dashed #d1d1d1; width: 100%; border-radius: 15px; font-weight: 700; cursor: pointer; }
 
-        /* --- Summary --- */
         .summary-box { background: var(--pmh-dark); color: white; padding: 20px; border-radius: 25px; }
         .sum-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .grand-total { font-size: 1.6rem; font-weight: 800; color: #f1c40f; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px; }
+        .grand-total { font-size: 1.6rem; font-weight: 800; color: #f1c40f; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
 
-        .btn-primary { background: var(--pmh-red); color: white; padding: 20px; border: none; border-radius: 18px; width: 100%; font-size: 1.2rem; font-weight: 800; margin-top: 20px; box-shadow: 0 8px 20px rgba(176, 30, 35, 0.3); text-transform: uppercase; }
+        .btn-primary { background: var(--pmh-red); color: white; padding: 20px; border: none; border-radius: 18px; width: 100%; font-size: 1.2rem; font-weight: 800; margin-top: 20px; box-shadow: 0 8px 20px rgba(176,30,35,0.3); }
 
-        /* --- Bottom Nav --- */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.08); z-index: 1000; }
         .nav-item { text-decoration: none; color: #bbb; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; }
-        .nav-item i { font-size: 1.5rem; }
-        .nav-item span { font-size: 0.7rem; font-weight: 600; margin-top: 3px; }
         .nav-item.active { color: var(--pmh-red); }
         .fab { background: var(--pmh-red); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -35px; border: 5px solid white; }
-
-        @media (max-width: 500px) { .row { grid-template-columns: 1fr; gap: 0; } }
     </style>
 </head>
 <body>
@@ -163,74 +91,49 @@
         <div class="form-card">
             <h3><i class="ri-mickey-line"></i> Occasion Info</h3>
             <label>Event Type</label>
-            <select id="occasion" onchange="checkOccasion()">
+            <select id="occasion">
                 <option value="">-- Select --</option>
                 <option value="Wedding">Wedding (शादी)</option>
                 <option value="Birthday">Birthday (जन्मदिन)</option>
                 <option value="Reception">Reception</option>
                 <option value="Ring Ceremony">Ring Ceremony</option>
-                <option value="Meeting">Meeting</option>
-                <option value="Corporate Meeting">Corporate Meeting</option>
                 <option value="Other">Other</option>
             </select>
-            <input id="otherOccasion" placeholder="Please specify occasion name" style="display:none">
         </div>
 
         <div class="form-card">
             <h3><i class="ri-user-heart-line"></i> Customer Details</h3>
             <label>Full Name</label>
             <input id="name" type="text" placeholder="Enter customer name">
-            
-            <div class="row">
-                <div>
-                    <label>Phone Number</label>
-                    <input id="phone" type="tel" placeholder="97715xxxxx">
-                </div>
-                <div>
-                    <label>Email Address</label>
-                    <input id="email" type="email" placeholder="Optional">
-                </div>
-            </div>
+            <label>Phone Number</label>
+            <input id="phone" type="tel" placeholder="97715xxxxx">
+            <label>Email Address</label>
+            <input id="email" type="email" placeholder="Optional">
             <label>Address</label>
             <textarea id="address" placeholder="Residential Address" rows="2"></textarea>
         </div>
 
         <div class="form-card">
             <h3><i class="ri-calendar-todo-line"></i> Schedule</h3>
-            
             <div class="touch-group" onclick="document.getElementById('dateFrom').showPicker()">
                 <i class="ri-calendar-check-line"></i>
-                <div>
-                    <span>Start Date</span>
-                    <b id="startDateLabel">Select Start Date</b>
-                </div>
+                <div><span>Start Date</span><b id="startDateLabel">Select Start Date</b></div>
                 <input type="date" id="dateFrom" onchange="updateLabel('dateFrom', 'startDateLabel')">
             </div>
-
             <div class="touch-group" onclick="document.getElementById('dateTo').showPicker()">
                 <i class="ri-calendar-event-line"></i>
-                <div>
-                    <span>End Date</span>
-                    <b id="endDateLabel">Select End Date</b>
-                </div>
+                <div><span>End Date</span><b id="endDateLabel">Select End Date</b></div>
                 <input type="date" id="dateTo" onchange="updateLabel('dateTo', 'endDateLabel')">
             </div>
-
-            <div class="row">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <div class="touch-group" onclick="document.getElementById('timeFrom').showPicker()">
                     <i class="ri-time-line"></i>
-                    <div>
-                        <span>In (Time)</span>
-                        <b id="timeInLabel">--:--</b>
-                    </div>
+                    <div><span>Time In</span><b id="timeInLabel">--:--</b></div>
                     <input type="time" id="timeFrom" onchange="updateLabel('timeFrom', 'timeInLabel')">
                 </div>
                 <div class="touch-group" onclick="document.getElementById('timeTo').showPicker()">
                     <i class="ri-time-line"></i>
-                    <div>
-                        <span>Out (Time)</span>
-                        <b id="timeOutLabel">--:--</b>
-                    </div>
+                    <div><span>Time Out</span><b id="timeOutLabel">--:--</b></div>
                     <input type="time" id="timeTo" onchange="updateLabel('timeTo', 'timeOutLabel')">
                 </div>
             </div>
@@ -238,36 +141,29 @@
 
         <div class="form-card">
             <h3><i class="ri-hotel-line"></i> Venue & Rooms</h3>
-            
             <div class="switch-row">
-                <span><i class="ri-building-line" style="margin-right:8px; color:#888;"></i> Hall Required?</span>
+                <span>Hall Required?</span>
                 <label class="switch">
                     <input type="checkbox" id="hallToggle" onchange="slideToggle('hallPriceBox', this)">
                     <span class="slider"></span>
                 </label>
             </div>
-            <div id="hallPriceBox" style="display:none; padding:15px 0 5px;">
+            <div id="hallPriceBox" style="display:none;">
                 <label>Hall Price (₹)</label>
                 <input id="hallPrice" type="number" placeholder="0" oninput="calculateTotal()">
             </div>
 
             <div class="switch-row">
-                <span><i class="ri-door-open-line" style="margin-right:8px; color:#888;"></i> Rooms Required?</span>
+                <span>Rooms Required?</span>
                 <label class="switch">
                     <input type="checkbox" id="roomToggle" onchange="slideToggle('roomDetailsBox', this)">
                     <span class="slider"></span>
                 </label>
             </div>
-            <div id="roomDetailsBox" style="display:none; padding-top:15px;">
-                <div class="row">
-                    <div>
-                        <label>No. of Rooms</label>
-                        <input id="rooms" type="number" placeholder="0" oninput="calculateTotal()">
-                    </div>
-                    <div>
-                        <label>Rate / Room (₹)</label>
-                        <input id="roomPrice" type="number" placeholder="0" oninput="calculateTotal()">
-                    </div>
+            <div id="roomDetailsBox" style="display:none;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div><label>Rooms</label><input id="rooms" type="number" placeholder="0" oninput="calculateTotal()"></div>
+                    <div><label>Rate</label><input id="roomPrice" type="number" placeholder="0" oninput="calculateTotal()"></div>
                 </div>
             </div>
         </div>
@@ -275,87 +171,160 @@
         <div class="form-card">
             <h3><i class="ri-add-circle-line"></i> Extra Charges</h3>
             <div id="reqBody"></div>
-            <button class="btn-add-pill" onclick="addRequirement()">
-                <i class="ri-add-line"></i> ADD SERVICE (DJ/CATERING/DECOR)
-            </button>
+            <button class="btn-add-pill" onclick="addRequirement()">+ ADD SERVICE (DJ/CATERING)</button>
         </div>
 
         <div class="form-card">
             <div class="summary-box">
                 <div class="sum-row grand-total">
-                    <span>Grand Total</span>
+                    <span>Total</span>
                     <span>₹ <span id="total">0</span></span>
                 </div>
-                <label style="color:rgba(255,255,255,0.7)">Advance Received (₹)</label>
-                <input id="paid" type="number" placeholder="0" style="background:rgba(255,255,255,0.1); color:white; border:none; margin-top:5px;" oninput="calculateTotal()">
-                
-                <div class="sum-row" style="margin-top:15px;">
-                    <span style="opacity:0.8;">Paid Amount</span>
-                    <span>₹ <span id="displayPaid">0</span></span>
-                </div>
-                <div class="sum-row" style="color: #ff7675; font-weight:800; font-size:1.1rem;">
-                    <span>Remaining Balance</span>
+                <label style="color:#aaa">Advance Received (₹)</label>
+                <input id="paid" type="number" style="background:#333; color:white; border:none;" oninput="calculateTotal()">
+                <div class="sum-row" style="color: #ff7675; font-weight:800; margin-top:15px;">
+                    <span>Balance</span>
                     <span>₹ <span id="remaining">0</span></span>
                 </div>
             </div>
-            
             <button class="btn-primary" onclick="saveBooking()">💾 SAVE BOOKING</button>
         </div>
     </div>
 
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item">
-            <i class="ri-dashboard-3-line"></i><span>Home</span>
-        </a>
-        <a href="bookings.html" class="nav-item">
-            <i class="ri-book-read-line"></i><span>Bookings</span>
-        </a>
-        <a href="new-booking.html" class="nav-item active">
-            <div class="fab"><i class="ri-add-line"></i></div><span>New</span>
-        </a>
-        <a href="calendar.html" class="nav-item">
-            <i class="ri-calendar-event-line"></i><span>Calendar</span>
-        </a>
+        <a href="index.html" class="nav-item"><i class="ri-dashboard-3-line"></i><span>Home</span></a>
+        <a href="bookings.html" class="nav-item"><i class="ri-book-read-line"></i><span>Bookings</span></a>
+        <a href="new-booking.html" class="nav-item active"><div class="fab"><i class="ri-add-line"></i></div><span>New</span></a>
+        <a href="calendar.html" class="nav-item"><i class="ri-calendar-event-line"></i><span>Calendar</span></a>
     </nav>
 
-    <script src="script.js"></script>
     <script>
-        // 1. FIXED: Update labels when date/time is picked
+        const API_URL = "https://pandey-marriage-hall.onrender.com/api/bookings";
+        let editId = new URLSearchParams(window.location.search).get('id');
+
+        // Initialize Page
+        window.onload = async () => {
+            if(editId) {
+                document.getElementById("pageTitle").innerText = "EDIT BOOKING";
+                await loadEditData();
+            }
+        };
+
         function updateLabel(inputId, labelId) {
             const val = document.getElementById(inputId).value;
-            const label = document.getElementById(labelId);
-            if(val) {
-                label.innerText = val;
-                label.style.color = "#b01e23";
-            } else {
-                label.innerText = (inputId.includes('time')) ? "--:--" : "Select Date";
-                label.style.color = "";
-            }
+            document.getElementById(labelId).innerText = val || "--:--";
         }
 
-        // 2. Handle Slide Panels
-        function slideToggle(boxId, checkbox) {
-            const el = document.getElementById(boxId);
-            el.style.display = checkbox.checked ? 'block' : 'none';
-            if(!checkbox.checked) {
-                el.querySelectorAll('input').forEach(i => i.value = '');
-                calculateTotal();
-            }
+        function slideToggle(id, checkbox) {
+            document.getElementById(id).style.display = checkbox.checked ? 'block' : 'none';
+            calculateTotal();
         }
 
-        // 3. Compact Charge Adder
         function addRequirement(desc = "", price = "") {
-            const container = document.getElementById("reqBody");
             const div = document.createElement("div");
             div.className = "charge-row";
             div.innerHTML = `
-                <input type="text" class="reqDesc" placeholder="e.g. DJ/Decor" value="${desc}">
-                <input type="number" class="reqPrice" placeholder="Price ₹" value="${price}" oninput="calculateTotal()">
-                <button class="btn-mini-del" onclick="this.parentElement.remove(); calculateTotal();">
-                    <i class="ri-delete-bin-line"></i>
-                </button>
-            `;
-            container.appendChild(div);
+                <input type="text" class="reqDesc" placeholder="Service" value="${desc}">
+                <input type="number" class="reqPrice" placeholder="₹" value="${price}" oninput="calculateTotal()">
+                <button class="btn-mini-del" onclick="this.parentElement.remove(); calculateTotal();"><i class="ri-delete-bin-line"></i></button>`;
+            document.getElementById("reqBody").appendChild(div);
+        }
+
+        function calculateTotal() {
+            const hPrice = parseFloat(document.getElementById("hallPrice").value) || 0;
+            const rCount = parseFloat(document.getElementById("rooms").value) || 0;
+            const rPrice = parseFloat(document.getElementById("roomPrice").value) || 0;
+            const paid = parseFloat(document.getElementById("paid").value) || 0;
+            
+            let extraTotal = 0;
+            document.querySelectorAll(".reqPrice").forEach(el => extraTotal += (parseFloat(el.value) || 0));
+
+            const grandTotal = hPrice + (rCount * rPrice) + extraTotal;
+            document.getElementById("total").innerText = grandTotal;
+            document.getElementById("remaining").innerText = grandTotal - paid;
+        }
+
+        async function saveBooking() {
+            const extraReqs = [];
+            document.querySelectorAll(".charge-row").forEach(row => {
+                extraReqs.push({
+                    desc: row.querySelector(".reqDesc").value,
+                    price: parseFloat(row.querySelector(".reqPrice").value) || 0
+                });
+            });
+
+            const data = {
+                name: document.getElementById("name").value,
+                phone: document.getElementById("phone").value,
+                email: document.getElementById("email").value,
+                address: document.getElementById("address").value,
+                occasion: document.getElementById("occasion").value,
+                dateFrom: document.getElementById("dateFrom").value,
+                dateTo: document.getElementById("dateTo").value,
+                timeFrom: document.getElementById("timeFrom").value,
+                timeTo: document.getElementById("timeTo").value,
+                hallPrice: parseFloat(document.getElementById("hallPrice").value) || 0,
+                rooms: parseFloat(document.getElementById("rooms").value) || 0,
+                roomPrice: parseFloat(document.getElementById("roomPrice").value) || 0,
+                extraRequirements: extraReqs,
+                total: parseFloat(document.getElementById("total").innerText),
+                paid: parseFloat(document.getElementById("paid").value) || 0,
+                remaining: parseFloat(document.getElementById("remaining").innerText)
+            };
+
+            if(!data.name || !data.dateFrom) return alert("Fill Name and Date!");
+
+            try {
+                const url = editId ? `${API_URL}/${editId}` : API_URL;
+                const method = editId ? "PUT" : "POST";
+                
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                if(res.ok) {
+                    alert("Success! ✅");
+                    window.location.href = "bookings.html";
+                }
+            } catch (err) { alert("Save failed!"); }
+        }
+
+        async function loadEditData() {
+            const res = await fetch(`${API_URL}/${editId}`);
+            const b = await res.json();
+            
+            document.getElementById("name").value = b.name;
+            document.getElementById("phone").value = b.phone;
+            document.getElementById("email").value = b.email;
+            document.getElementById("address").value = b.address;
+            document.getElementById("occasion").value = b.occasion;
+            document.getElementById("dateFrom").value = b.dateFrom;
+            document.getElementById("dateTo").value = b.dateTo;
+            document.getElementById("timeFrom").value = b.timeFrom;
+            document.getElementById("timeTo").value = b.timeTo;
+            
+            if(b.hallPrice > 0) {
+                document.getElementById("hallToggle").checked = true;
+                document.getElementById("hallPriceBox").style.display = "block";
+                document.getElementById("hallPrice").value = b.hallPrice;
+            }
+            if(b.rooms > 0) {
+                document.getElementById("roomToggle").checked = true;
+                document.getElementById("roomDetailsBox").style.display = "block";
+                document.getElementById("rooms").value = b.rooms;
+                document.getElementById("roomPrice").value = b.roomPrice;
+            }
+
+            b.extraRequirements.forEach(req => addRequirement(req.desc, req.price));
+            document.getElementById("paid").value = b.paid;
+            
+            updateLabel('dateFrom', 'startDateLabel');
+            updateLabel('dateTo', 'endDateLabel');
+            updateLabel('timeFrom', 'timeInLabel');
+            updateLabel('timeTo', 'timeOutLabel');
+            calculateTotal();
         }
     </script>
 </body>

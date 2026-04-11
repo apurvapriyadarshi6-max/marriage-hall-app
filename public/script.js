@@ -1,7 +1,8 @@
 /* --- GLOBAL CONFIG & STATE --- */
 const params = new URLSearchParams(window.location.search);
 const editId = params.get("id");
-const API_URL = "/api/bookings";
+// Use absolute path for reliability across different deployment environments
+const API_URL = "https://pandey-marriage-hall.onrender.com/api/bookings";
 
 /* --- UI HELPERS --- */
 
@@ -11,7 +12,7 @@ function updateLabel(inputId, labelId) {
     const label = document.getElementById(labelId);
     if (input && label && input.value) {
         label.innerText = input.value;
-        label.style.color = "#b01e23";
+        label.style.color = "#b01e23"; // Signature Red when selected
     }
 }
 
@@ -54,18 +55,18 @@ function addRequirement(desc = "", price = "") {
     container.appendChild(div);
 }
 
-/* --- CALCULATION LOGIC (FIXED) --- */
+/* --- CALCULATION LOGIC --- */
 
 function calculateTotal() {
     let total = 0;
 
-    // 1. Hall Price (Check if Toggle is ON)
+    // 1. Hall Price
     const hallTog = document.getElementById("hallToggle");
     if (hallTog && hallTog.checked) {
         total += parseFloat(document.getElementById("hallPrice").value) || 0;
     }
 
-    // 2. Room Price (Check if Toggle is ON)
+    // 2. Room Price calculation
     const roomTog = document.getElementById("roomToggle");
     if (roomTog && roomTog.checked) {
         const count = parseFloat(document.getElementById("rooms").value) || 0;
@@ -73,23 +74,23 @@ function calculateTotal() {
         total += (count * rate);
     }
 
-    // 3. Extra Requirements
+    // 3. Extra Requirements (DJ, Catering, etc.)
     document.querySelectorAll(".reqPrice").forEach(input => {
         total += parseFloat(input.value) || 0;
     });
 
-    // Update UI
+    // Update UI Summary
     const paid = parseFloat(document.getElementById("paid").value) || 0;
     const remaining = total - paid;
 
-    document.getElementById("total").innerText = total.toFixed(2);
+    document.getElementById("total").innerText = Math.round(total);
     const dPaid = document.getElementById("displayPaid");
-    if (dPaid) dPaid.innerText = paid.toFixed(2);
+    if (dPaid) dPaid.innerText = Math.round(paid);
     
     const remEl = document.getElementById("remaining");
     if (remEl) {
-        remEl.innerText = remaining.toFixed(2);
-        remEl.style.color = remaining > 0 ? "#ff7675" : "#2ecc71";
+        remEl.innerText = Math.round(remaining);
+        remEl.style.color = remaining > 0 ? "#ff7675" : "#2ecc71"; // Red if due, Green if cleared
     }
 }
 
@@ -106,7 +107,7 @@ async function saveBooking() {
         return alert("⚠️ Please fill mandatory fields: Name, Phone, and Start Date.");
     }
 
-    // Collect extra requirements from the new pill-row design
+    // Collect extra requirements array
     const requirements = [];
     document.querySelectorAll(".charge-row").forEach(row => {
         const desc = row.querySelector(".reqDesc").value.trim();
@@ -126,12 +127,9 @@ async function saveBooking() {
         dateTo: document.getElementById("dateTo").value || dateFrom,
         timeFrom: document.getElementById("timeFrom").value,
         timeTo: document.getElementById("timeTo").value,
-        
-        // Logical check for toggles
         hallPrice: document.getElementById("hallToggle").checked ? (parseFloat(document.getElementById("hallPrice").value) || 0) : 0,
         rooms: document.getElementById("roomToggle").checked ? (parseFloat(document.getElementById("rooms").value) || 0) : 0,
         roomPrice: document.getElementById("roomToggle").checked ? (parseFloat(document.getElementById("roomPrice").value) || 0) : 0,
-        
         extraRequirements: requirements,
         total: parseFloat(document.getElementById("total").innerText),
         paid: parseFloat(document.getElementById("paid").value) || 0,
@@ -152,35 +150,34 @@ async function saveBooking() {
         });
 
         if (res.ok) {
-            alert("✅ Booking Success!");
+            alert("✅ Booking Saved Successfully!");
             window.location.href = "bookings.html";
         } else {
             throw new Error("Failed to save");
         }
     } catch (err) {
-        alert("❌ Error: Could not save.");
+        console.error("Save Error:", err);
+        alert("❌ Error: Could not connect to server.");
         saveBtn.disabled = false;
         saveBtn.innerText = "💾 SAVE BOOKING";
     }
 }
 
-/* --- INITIALIZATION & EDIT LOAD (FIXED) --- */
+/* --- INITIALIZATION & EDIT LOAD --- */
 
 window.addEventListener("DOMContentLoaded", async () => {
-    // Listener for real-time calculations
-    document.addEventListener("input", (e) => {
-        if (['paid', 'rooms', 'roomPrice', 'hallPrice'].includes(e.target.id) || e.target.classList.contains('reqPrice')) {
-            calculateTotal();
-        }
-    });
+    // 1. Initial Calculation Setup
+    calculateTotal();
 
+    // 2. Load Existing Data if in Edit Mode
     if (editId) {
         document.getElementById("pageTitle").innerText = "EDIT BOOKING";
         try {
             const res = await fetch(`${API_URL}/${editId}`);
+            if (!res.ok) throw new Error("Could not find booking");
             const b = await res.json();
 
-            // Populate Text Fields
+            // Basic Fields
             document.getElementById("name").value = b.name || "";
             document.getElementById("phone").value = b.phone || "";
             document.getElementById("email").value = b.email || "";
@@ -190,39 +187,44 @@ window.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("timeFrom").value = b.timeFrom || "";
             document.getElementById("timeTo").value = b.timeTo || "";
 
-            // Sync the Labels on the UI
+            // Sync Visual Labels
             updateLabel('dateFrom', 'startDateLabel');
             updateLabel('dateTo', 'endDateLabel');
             updateLabel('timeFrom', 'timeInLabel');
             updateLabel('timeTo', 'timeOutLabel');
 
             // Occasion logic
-            const standardOccasions = ["Wedding", "Birthday", "Reception", "Ring Ceremony", "Meeting", "Corporate Meeting"];
             const occSelect = document.getElementById("occasion");
-            if (standardOccasions.includes(b.occasion)) {
+            const standardOptions = Array.from(occSelect.options).map(opt => opt.value);
+            if (standardOptions.includes(b.occasion)) {
                 occSelect.value = b.occasion;
             } else {
                 occSelect.value = "Other";
-                document.getElementById("otherOccasion").value = b.occasion;
-                document.getElementById("otherOccasion").style.display = "block";
+                const otherInp = document.getElementById("otherOccasion");
+                if (otherInp) {
+                    otherInp.value = b.occasion;
+                    otherInp.style.display = "block";
+                }
             }
 
-            // Hall Logic (Activate Toggle)
+            // Hall Logic
             if (b.hallPrice > 0) {
-                document.getElementById("hallToggle").checked = true;
-                document.getElementById("hallPriceBox").style.display = "block";
+                const hTog = document.getElementById("hallToggle");
+                hTog.checked = true;
+                slideToggle("hallPriceBox", hTog);
                 document.getElementById("hallPrice").value = b.hallPrice;
             }
 
-            // Room Logic (Activate Toggle)
+            // Room Logic
             if (b.rooms > 0) {
-                document.getElementById("roomToggle").checked = true;
-                document.getElementById("roomDetailsBox").style.display = "block";
+                const rTog = document.getElementById("roomToggle");
+                rTog.checked = true;
+                slideToggle("roomDetailsBox", rTog);
                 document.getElementById("rooms").value = b.rooms;
                 document.getElementById("roomPrice").value = b.roomPrice;
             }
 
-            // Load Extra Charges
+            // Extra Charges
             if (b.extraRequirements && b.extraRequirements.length > 0) {
                 b.extraRequirements.forEach(req => addRequirement(req.desc, req.price));
             }
@@ -231,7 +233,8 @@ window.addEventListener("DOMContentLoaded", async () => {
             calculateTotal();
             
         } catch (err) {
-            console.error("Load Error:", err);
+            console.error("Fetch Error:", err);
+            alert("Error loading booking details.");
         }
     }
 });
