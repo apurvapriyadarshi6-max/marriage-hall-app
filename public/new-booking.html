@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>New Booking | Pandey Marriage Hall</title>
+    <title>Booking Entry | Pandey Marriage Hall</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <style>
         :root {
@@ -57,7 +57,7 @@
         input:checked + .slider { background-color: var(--switch-green); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        .touch-group { background: #f8f9fa; border: 1px solid #eee; padding: 12px; border-radius: 15px; display: flex; align-items: center; gap: 12px; margin-bottom: 15px; cursor: pointer; }
+        .touch-group { background: #f8f9fa; border: 1px solid #eee; padding: 12px; border-radius: 15px; display: flex; align-items: center; gap: 12px; margin-bottom: 15px; cursor: pointer; position: relative; }
         .touch-group i { color: var(--pmh-red); font-size: 1.4rem; }
         .touch-group div { flex: 1; pointer-events: none; }
         .touch-group span { display: block; font-size: 0.65rem; color: #888; font-weight: 800; }
@@ -73,7 +73,7 @@
         .sum-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
         .grand-total { font-size: 1.6rem; font-weight: 800; color: #f1c40f; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
 
-        .btn-primary { background: var(--pmh-red); color: white; padding: 20px; border: none; border-radius: 18px; width: 100%; font-size: 1.2rem; font-weight: 800; margin-top: 20px; box-shadow: 0 8px 20px rgba(176,30,35,0.3); }
+        .btn-primary { background: var(--pmh-red); color: white; padding: 20px; border: none; border-radius: 18px; width: 100%; font-size: 1.2rem; font-weight: 800; margin-top: 20px; box-shadow: 0 8px 20px rgba(176,30,35,0.3); cursor: pointer; }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.08); z-index: 1000; }
         .nav-item { text-decoration: none; color: #bbb; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; }
@@ -104,25 +104,23 @@
         <div class="form-card">
             <h3><i class="ri-user-heart-line"></i> Customer Details</h3>
             <label>Full Name</label>
-            <input id="name" type="text" placeholder="Enter customer name">
+            <input id="name" type="text" placeholder="Customer Name">
             <label>Phone Number</label>
-            <input id="phone" type="tel" placeholder="97715xxxxx">
-            <label>Email Address</label>
-            <input id="email" type="email" placeholder="Optional">
+            <input id="phone" type="tel" placeholder="Mobile Number">
             <label>Address</label>
-            <textarea id="address" placeholder="Residential Address" rows="2"></textarea>
-        </div>
+            <textarea id="address" placeholder="Village/City Address" rows="2"></textarea>
+            <input id="email" type="hidden"> </div>
 
         <div class="form-card">
             <h3><i class="ri-calendar-todo-line"></i> Schedule</h3>
             <div class="touch-group" onclick="document.getElementById('dateFrom').showPicker()">
                 <i class="ri-calendar-check-line"></i>
-                <div><span>Start Date</span><b id="startDateLabel">Select Start Date</b></div>
+                <div><span>Start Date</span><b id="startDateLabel">Select Date</b></div>
                 <input type="date" id="dateFrom" onchange="updateLabel('dateFrom', 'startDateLabel')">
             </div>
             <div class="touch-group" onclick="document.getElementById('dateTo').showPicker()">
                 <i class="ri-calendar-event-line"></i>
-                <div><span>End Date</span><b id="endDateLabel">Select End Date</b></div>
+                <div><span>End Date</span><b id="endDateLabel">Select Date</b></div>
                 <input type="date" id="dateTo" onchange="updateLabel('dateTo', 'endDateLabel')">
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -171,41 +169,42 @@
         <div class="form-card">
             <h3><i class="ri-add-circle-line"></i> Extra Charges</h3>
             <div id="reqBody"></div>
-            <button class="btn-add-pill" onclick="addRequirement()">+ ADD SERVICE (DJ/CATERING)</button>
+            <button class="btn-add-pill" onclick="addRequirement()">+ ADD EXTRA SERVICE</button>
         </div>
 
         <div class="form-card">
             <div class="summary-box">
                 <div class="sum-row grand-total">
-                    <span>Total</span>
+                    <span>Total Bill</span>
                     <span>₹ <span id="total">0</span></span>
                 </div>
-                <label style="color:#aaa">Advance Received (₹)</label>
-                <input id="paid" type="number" style="background:#333; color:white; border:none;" oninput="calculateTotal()">
-                <div class="sum-row" style="color: #ff7675; font-weight:800; margin-top:15px;">
-                    <span>Balance</span>
-                    <span>₹ <span id="remaining">0</span></span>
+                <label style="color:#aaa">Amount Paid (Advance)</label>
+                <input id="paid" type="number" placeholder="0" style="background:#333; color:white; border:none; margin-bottom: 0;" oninput="calculateTotal()">
+                
+                <div class="sum-row" style="margin-top:20px;">
+                    <span style="font-weight: 800;">Balance Due</span>
+                    <span style="font-weight: 800;">₹ <span id="remaining">0</span></span>
                 </div>
             </div>
-            <button class="btn-primary" onclick="saveBooking()">💾 SAVE BOOKING</button>
+            <button id="saveBtn" class="btn-primary" onclick="saveBooking()">💾 SAVE BOOKING</button>
         </div>
     </div>
 
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item"><i class="ri-dashboard-3-line"></i><span>Home</span></a>
-        <a href="bookings.html" class="nav-item"><i class="ri-book-read-line"></i><span>Bookings</span></a>
-        <a href="new-booking.html" class="nav-item active"><div class="fab"><i class="ri-add-line"></i></div><span>New</span></a>
-        <a href="calendar.html" class="nav-item"><i class="ri-calendar-event-line"></i><span>Calendar</span></a>
+        <a href="index.html" class="nav-item"><i class="ri-dashboard-3-line" style="font-size: 1.4rem;"></i><span>Home</span></a>
+        <a href="bookings.html" class="nav-item"><i class="ri-book-read-line" style="font-size: 1.4rem;"></i><span>Bookings</span></a>
+        <a href="new-booking.html" class="nav-item active"><div class="fab"><i class="ri-add-line" style="font-size: 1.8rem;"></i></div></a>
+        <a href="calendar.html" class="nav-item"><i class="ri-calendar-event-line" style="font-size: 1.4rem;"></i><span>Calendar</span></a>
     </nav>
 
     <script>
-        const API_URL = "https://pandey-marriage-hall.onrender.com/api/bookings";
+        const API_URL = "/api/bookings";
         let editId = new URLSearchParams(window.location.search).get('id');
 
-        // Initialize Page
         window.onload = async () => {
             if(editId) {
                 document.getElementById("pageTitle").innerText = "EDIT BOOKING";
+                document.getElementById("saveBtn").innerText = "💾 UPDATE BOOKING";
                 await loadEditData();
             }
         };
@@ -224,8 +223,8 @@
             const div = document.createElement("div");
             div.className = "charge-row";
             div.innerHTML = `
-                <input type="text" class="reqDesc" placeholder="Service" value="${desc}">
-                <input type="number" class="reqPrice" placeholder="₹" value="${price}" oninput="calculateTotal()">
+                <input type="text" class="reqDesc" placeholder="e.g. DJ" value="${desc}">
+                <input type="number" class="reqPrice" placeholder="Price" value="${price}" oninput="calculateTotal()">
                 <button class="btn-mini-del" onclick="this.parentElement.remove(); calculateTotal();"><i class="ri-delete-bin-line"></i></button>`;
             document.getElementById("reqBody").appendChild(div);
         }
@@ -234,29 +233,43 @@
             const hPrice = parseFloat(document.getElementById("hallPrice").value) || 0;
             const rCount = parseFloat(document.getElementById("rooms").value) || 0;
             const rPrice = parseFloat(document.getElementById("roomPrice").value) || 0;
-            const paid = parseFloat(document.getElementById("paid").value) || 0;
+            const paidAmt = parseFloat(document.getElementById("paid").value) || 0;
             
             let extraTotal = 0;
             document.querySelectorAll(".reqPrice").forEach(el => extraTotal += (parseFloat(el.value) || 0));
 
             const grandTotal = hPrice + (rCount * rPrice) + extraTotal;
+            
+            // NO MINUS LOGIC: Math.max(0, ...) ensures result is never less than 0
+            const balance = Math.max(0, grandTotal - paidAmt);
+
             document.getElementById("total").innerText = grandTotal;
-            document.getElementById("remaining").innerText = grandTotal - paid;
+            document.getElementById("remaining").innerText = balance;
+
+            // Visual indicator: Green for paid, Red for due
+            const remEl = document.getElementById("remaining");
+            if(balance === 0 && paidAmt >= grandTotal && grandTotal > 0) {
+                remEl.style.color = "#2ecc71";
+                remEl.innerText = "0 (PAID)";
+            } else {
+                remEl.style.color = "#ff7675";
+            }
         }
 
         async function saveBooking() {
             const extraReqs = [];
             document.querySelectorAll(".charge-row").forEach(row => {
-                extraReqs.push({
-                    desc: row.querySelector(".reqDesc").value,
-                    price: parseFloat(row.querySelector(".reqPrice").value) || 0
-                });
+                const desc = row.querySelector(".reqDesc").value;
+                const price = parseFloat(row.querySelector(".reqPrice").value) || 0;
+                if(desc) extraReqs.push({ desc, price });
             });
+
+            const totalBill = parseFloat(document.getElementById("total").innerText);
+            const paidVal = parseFloat(document.getElementById("paid").value) || 0;
 
             const data = {
                 name: document.getElementById("name").value,
                 phone: document.getElementById("phone").value,
-                email: document.getElementById("email").value,
                 address: document.getElementById("address").value,
                 occasion: document.getElementById("occasion").value,
                 dateFrom: document.getElementById("dateFrom").value,
@@ -267,12 +280,13 @@
                 rooms: parseFloat(document.getElementById("rooms").value) || 0,
                 roomPrice: parseFloat(document.getElementById("roomPrice").value) || 0,
                 extraRequirements: extraReqs,
-                total: parseFloat(document.getElementById("total").innerText),
-                paid: parseFloat(document.getElementById("paid").value) || 0,
-                remaining: parseFloat(document.getElementById("remaining").innerText)
+                total: totalBill,
+                paid: paidVal,
+                // Ensure backend also gets zero instead of negative numbers
+                remaining: Math.max(0, totalBill - paidVal)
             };
 
-            if(!data.name || !data.dateFrom) return alert("Fill Name and Date!");
+            if(!data.name || !data.dateFrom) return alert("Please fill Name and Start Date!");
 
             try {
                 const url = editId ? `${API_URL}/${editId}` : API_URL;
@@ -285,46 +299,57 @@
                 });
 
                 if(res.ok) {
-                    alert("Success! ✅");
+                    alert("Booking Saved Successfully! ✅");
                     window.location.href = "bookings.html";
                 }
-            } catch (err) { alert("Save failed!"); }
+            } catch (err) { 
+                console.error(err);
+                alert("Error saving data. Please check your connection."); 
+            }
         }
 
         async function loadEditData() {
-            const res = await fetch(`${API_URL}/${editId}`);
-            const b = await res.json();
-            
-            document.getElementById("name").value = b.name;
-            document.getElementById("phone").value = b.phone;
-            document.getElementById("email").value = b.email;
-            document.getElementById("address").value = b.address;
-            document.getElementById("occasion").value = b.occasion;
-            document.getElementById("dateFrom").value = b.dateFrom;
-            document.getElementById("dateTo").value = b.dateTo;
-            document.getElementById("timeFrom").value = b.timeFrom;
-            document.getElementById("timeTo").value = b.timeTo;
-            
-            if(b.hallPrice > 0) {
-                document.getElementById("hallToggle").checked = true;
-                document.getElementById("hallPriceBox").style.display = "block";
-                document.getElementById("hallPrice").value = b.hallPrice;
-            }
-            if(b.rooms > 0) {
-                document.getElementById("roomToggle").checked = true;
-                document.getElementById("roomDetailsBox").style.display = "block";
-                document.getElementById("rooms").value = b.rooms;
-                document.getElementById("roomPrice").value = b.roomPrice;
-            }
+            try {
+                const res = await fetch(`${API_URL}/${editId}`);
+                if(!res.ok) throw new Error("Load failed");
+                const b = await res.json();
+                
+                document.getElementById("name").value = b.name || "";
+                document.getElementById("phone").value = b.phone || "";
+                document.getElementById("address").value = b.address || "";
+                document.getElementById("occasion").value = b.occasion || "";
+                document.getElementById("dateFrom").value = b.dateFrom || "";
+                document.getElementById("dateTo").value = b.dateTo || "";
+                document.getElementById("timeFrom").value = b.timeFrom || "";
+                document.getElementById("timeTo").value = b.timeTo || "";
+                
+                if(b.hallPrice > 0) {
+                    document.getElementById("hallToggle").checked = true;
+                    document.getElementById("hallPriceBox").style.display = "block";
+                    document.getElementById("hallPrice").value = b.hallPrice;
+                }
+                if(b.rooms > 0) {
+                    document.getElementById("roomToggle").checked = true;
+                    document.getElementById("roomDetailsBox").style.display = "block";
+                    document.getElementById("rooms").value = b.rooms;
+                    document.getElementById("roomPrice").value = b.roomPrice;
+                }
 
-            b.extraRequirements.forEach(req => addRequirement(req.desc, req.price));
-            document.getElementById("paid").value = b.paid;
-            
-            updateLabel('dateFrom', 'startDateLabel');
-            updateLabel('dateTo', 'endDateLabel');
-            updateLabel('timeFrom', 'timeInLabel');
-            updateLabel('timeTo', 'timeOutLabel');
-            calculateTotal();
+                if(b.extraRequirements && b.extraRequirements.length > 0) {
+                    b.extraRequirements.forEach(req => addRequirement(req.desc, req.price));
+                }
+
+                document.getElementById("paid").value = b.paid || 0;
+                
+                updateLabel('dateFrom', 'startDateLabel');
+                updateLabel('dateTo', 'endDateLabel');
+                updateLabel('timeFrom', 'timeInLabel');
+                updateLabel('timeTo', 'timeOutLabel');
+                calculateTotal();
+            } catch (err) {
+                console.error(err);
+                alert("Error loading booking details.");
+            }
         }
     </script>
 </body>

@@ -1,8 +1,11 @@
+/**
+ * Pandey Marriage Hall - Unified Booking Manager Logic
+ * Handles dynamic data loading, filtering, and customer financials with "No-Minus" protection.
+ */
+
 let bookingsData = [];
 
-/**
- * HELPER: Detects if running on localhost or cloud
- */
+// 1. DYNAMIC API URL
 const getApiBaseUrl = () => {
     return (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
         ? "" // Local relative path
@@ -38,13 +41,16 @@ function shareOnWhatsApp(id) {
     const start = formatDateDisplay(b.dateFrom);
     const end = formatDateDisplay(b.dateTo);
     const dateRange = (b.dateTo && b.dateTo !== b.dateFrom) ? `${start} to ${end}` : start;
+    
+    // NO-MINUS FIX for WhatsApp
+    const displayBalance = Math.max(0, b.remaining || 0);
 
-    const message = `*PANDEY MARRIAGE HALL - RECEIPT*%0A------------------------------%0A*Customer:* ${b.name}%0A*Event:* ${b.occasion}%0A*Dates:* ${dateRange}%0A------------------------------%0A*Total Amount:* ₹${b.total}%0A*Paid Amount:* ₹${b.paid}%0A*Remaining Balance:* ₹${b.remaining}%0A------------------------------%0A_Thank you for choosing Pandey Marriage Hall!_`;
+    const message = `*PANDEY MARRIAGE HALL - RECEIPT*%0A------------------------------%0A*Customer:* ${b.name}%0A*Event:* ${b.occasion}%0A*Dates:* ${dateRange}%0A------------------------------%0A*Total Amount:* ₹${b.total}%0A*Paid Amount:* ₹${b.paid}%0A*Remaining Balance:* ₹${displayBalance}%0A------------------------------%0A_Thank you for choosing Pandey Marriage Hall!_`;
 
     window.open(`https://wa.me/91${b.phone}?text=${message}`, '_blank');
 }
 
-// --- DATA LOADING ---
+// --- DATA LOADING & RENDERING ---
 
 async function loadBookings() {
     const list = document.getElementById("bookingList");
@@ -68,26 +74,42 @@ async function loadBookings() {
     }
 }
 
+/**
+ * Renders the UI and calculates Top Summary Stats
+ */
 function displayBookings(data) {
     const table = document.getElementById("bookingTable");
     const list = document.getElementById("bookingList"); 
+    const collectedEl = document.getElementById("totalCollected");
+    const dueEl = document.getElementById("totalDue");
     
     if (table) table.innerHTML = "";
     if (list) list.innerHTML = "";
 
+    let runningCollected = 0;
+    let runningDue = 0;
+
     if (data.length === 0) {
         if (table) table.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No bookings found</td></tr>";
         if (list) list.innerHTML = "<p style='text-align:center; padding:20px;'>No bookings found.</p>";
+        if (collectedEl) collectedEl.innerText = "₹0";
+        if (dueEl) dueEl.innerText = "₹0";
         return;
     }
 
     data.forEach(b => {
+        // NO-MINUS FIX: Ensure we never calculate or show negative balances
+        const displayBalance = Math.max(0, b.remaining || 0);
+
+        runningCollected += parseFloat(b.paid) || 0;
+        runningDue += displayBalance;
+
         const start = formatDateDisplay(b.dateFrom);
         const end = formatDateDisplay(b.dateTo);
         const dateRangeText = (b.dateTo && b.dateTo !== b.dateFrom) ? `${start} — ${end}` : start;
         
         let status = "Pending";
-        if (b.remaining <= 0) status = "Paid";
+        if (displayBalance <= 0) status = "Paid";
         else if (b.paid > 0) status = "Partial";
         const statusClass = status.toLowerCase();
 
@@ -106,16 +128,19 @@ function displayBookings(data) {
                 <div class="card-body">
                     <div><i class="ri-phone-line"></i> ${b.phone}</div>
                     <div><i class="ri-calendar-event-line"></i> ${dateRangeText}</div>
-                    <div><i class="ri-mickey-line"></i> ${b.occasion || "-"}</div>
-                    <div style="color:${b.remaining > 0 ? 'var(--danger)' : 'var(--success)'}; font-weight:bold;">
-                        <i class="ri-money-rupee-circle-line"></i> Bal: ₹${b.remaining}
+                    
+                    <div style="font-weight: 600; color: var(--pmh-dark); margin-top: 5px;">
+                        <i class="ri-money-rupee-circle-fill"></i> Total Amount: ₹${b.total}
+                    </div>
+                    <div style="font-weight: 800; color: ${displayBalance > 0 ? 'var(--danger)' : 'var(--success)'};">
+                        <i class="ri-hand-coin-fill"></i> Required to Pay: ₹${displayBalance}
                     </div>
                 </div>
                 <div class="card-footer">
                     <div class="btn-group">
                         <button class="action-btn btn-call" onclick="makeCall('${b.phone}')"><i class="ri-phone-fill"></i></button>
                         <button class="action-btn btn-whatsapp" onclick="shareOnWhatsApp('${b._id}')"><i class="ri-whatsapp-line"></i></button>
-                        ${b.remaining > 0 ? `<button class="action-btn btn-pay" onclick="quickPay('${b._id}', ${b.paid}, ${b.total}, '${b.name}')"><i class="ri-hand-coin-line"></i></button>` : ''}
+                        ${displayBalance > 0 ? `<button class="action-btn btn-pay" onclick="quickPay('${b._id}', ${b.paid}, ${b.total}, '${b.name}')"><i class="ri-hand-coin-line"></i></button>` : ''}
                         <button class="action-btn btn-edit" onclick="editBooking('${b._id}')"><i class="ri-edit-line"></i></button>
                         <button class="action-btn btn-bill" onclick="generateBill('${b._id}')"><i class="ri-file-list-3-line"></i></button>
                         <button class="action-btn btn-del" onclick="deleteBooking('${b._id}')"><i class="ri-delete-bin-line"></i></button>
@@ -134,12 +159,12 @@ function displayBookings(data) {
                 <td>${b.occasion || "-"}</td>
                 <td>${dateRangeText}</td>
                 <td>₹${b.total}</td>
-                <td style="color:${b.remaining > 0 ? 'red' : 'green'}; font-weight:bold;">₹${b.remaining}</td>
+                <td style="color:${displayBalance > 0 ? 'red' : 'green'}; font-weight:bold;">₹${displayBalance}</td>
                 <td><span class="badge status-${statusClass}">${status}</span></td>
                 <td>
                     <div class="btn-group">
                         <button class="action-btn btn-whatsapp" onclick="shareOnWhatsApp('${b._id}')"><i class="ri-whatsapp-line"></i></button>
-                        ${b.remaining > 0 ? `<button class="action-btn btn-pay" onclick="quickPay('${b._id}', ${b.paid}, ${b.total}, '${b.name}')"><i class="ri-hand-coin-line"></i></button>` : ''}
+                        ${displayBalance > 0 ? `<button class="action-btn btn-pay" onclick="quickPay('${b._id}', ${b.paid}, ${b.total}, '${b.name}')"><i class="ri-hand-coin-line"></i></button>` : ''}
                         <button class="action-btn btn-bill" onclick="generateBill('${b._id}')"><i class="ri-file-list-3-line"></i></button>
                         <button class="action-btn btn-del" onclick="deleteBooking('${b._id}')"><i class="ri-delete-bin-line"></i></button>
                     </div>
@@ -147,12 +172,19 @@ function displayBookings(data) {
             table.appendChild(row);
         }
     });
+
+    // Update Top Summary Bar (Currency Formatting en-IN)
+    const f = new Intl.NumberFormat('en-IN');
+    if (collectedEl) collectedEl.innerText = "₹" + f.format(runningCollected);
+    if (dueEl) dueEl.innerText = "₹" + f.format(runningDue);
 }
 
 // --- MODAL & UPDATES ---
 
 function quickPay(id, currentPaid, total, name) {
-    const remaining = total - currentPaid;
+    const rawRemaining = total - currentPaid;
+    const displayBalance = Math.max(0, rawRemaining); // NO-MINUS FIX
+    
     const modal = document.getElementById("paymentModal");
     const nameTag = document.getElementById("modalCustomerName");
     const balanceText = document.getElementById("modalBalanceText");
@@ -161,7 +193,7 @@ function quickPay(id, currentPaid, total, name) {
 
     modal.style.display = "flex";
     if(nameTag) nameTag.innerText = name;
-    if(balanceText) balanceText.innerText = `Remaining: ₹${remaining}`;
+    if(balanceText) balanceText.innerText = `Remaining Due: ₹${displayBalance}`;
     input.value = "";
     setTimeout(() => input.focus(), 100);
 
@@ -237,6 +269,8 @@ function generateYears() {
 function generateBill(id) {
     const b = bookingsData.find(item => item._id === id);
     if (!b) return;
+    
+    const displayBalance = Math.max(0, b.remaining || 0); // NO-MINUS FIX
 
     const win = window.open("", "_blank", "width=800,height=900");
     const dateRange = (b.dateTo && b.dateTo !== b.dateFrom) 
@@ -270,7 +304,7 @@ function generateBill(id) {
             <div class="header">
                 <div class="title">पांडेय मैरेज हॉल</div>
                 <div class="address">पुरानी बाजार – शिवपुरी कॉलोनी, गोह | औरंगाबाद, बिहार</div>
-                <div class="address">मो: +91 9771592296, +91 9934241188</div>
+                <div class="address">मो: +91 9771592296</div>
             </div>
 
             <div class="info-grid">
@@ -304,7 +338,7 @@ function generateBill(id) {
                     <tr class="total-row">
                         <td>₹${b.total}</td>
                         <td style="color: #27ae60;">₹${b.paid}</td>
-                        <td style="color: #e74c3c;">₹${b.remaining}</td>
+                        <td style="color: #e74c3c;">₹${displayBalance}</td>
                     </tr>
                 </tbody>
             </table>

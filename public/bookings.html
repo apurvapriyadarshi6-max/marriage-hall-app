@@ -9,7 +9,6 @@
     <link rel="manifest" href="/manifest.json">
     
     <script>
-        // Register Service Worker for PWA Offline Support
         if ("serviceWorker" in navigator) {
             navigator.serviceWorker.register("/sw.js").catch(err => console.log("SW registration failed", err));
         }
@@ -66,9 +65,21 @@
         }
         .search-bar input:focus { outline: none; border-color: var(--info); background: #fff; }
 
-        .filters { display: flex; gap: 8px; align-items: center; }
+        .filters { display: flex; gap: 8px; align-items: center; margin-bottom: 15px; }
         .filters select { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #e0e0e0; background: #fff; font-size: 14px; }
         .btn-reset { background: rgba(176, 30, 35, 0.1); border: none; color: var(--pmh-red); font-weight: bold; padding: 10px 15px; border-radius: 10px; cursor: pointer; }
+
+        /* --- Financial Summary Bar --- */
+        .summary-bar {
+            display: flex; gap: 10px; border-top: 1px solid #eee; padding-top: 15px;
+        }
+        .summary-item {
+            flex: 1; padding: 12px; border-radius: 12px; text-align: center;
+        }
+        .summary-item small { display: block; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; }
+        .summary-item span { font-size: 1.1rem; font-weight: 800; }
+        .bg-success-light { background: #e8f5e9; color: #1b5e20; }
+        .bg-danger-light { background: #ffebee; color: #b71c1c; }
 
         /* --- Mobile Booking Cards --- */
         .booking-list { padding: 10px; }
@@ -97,7 +108,6 @@
 
         .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f1f1; padding-top: 12px; }
         
-        /* --- Action Buttons --- */
         .btn-group { display: flex; gap: 6px; }
         .action-btn { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: 0.2s; color: white; }
         .btn-pay { background: var(--success); }
@@ -108,7 +118,7 @@
         .btn-whatsapp { background: var(--whatsapp); }
         .action-btn:active { transform: scale(0.9); }
 
-        /* --- Payment Modal --- */
+        /* --- Modal --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 32, 39, 0.75);
@@ -142,9 +152,7 @@
         }
         .nav-item { text-decoration: none; color: #bbb; text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; }
         .nav-item.active { color: var(--pmh-red); }
-        .nav-item i { font-size: 1.4rem; }
         .nav-item span { font-size: 0.65rem; font-weight: 600; margin-top: 2px; }
-
         .fab {
             background: linear-gradient(135deg, var(--pmh-red), var(--pmh-red-dark));
             color: white; width: 50px; height: 50px; border-radius: 50%;
@@ -163,7 +171,7 @@
     <div class="search-section">
         <div class="search-bar">
             <i class="ri-search-line"></i>
-            <input type="text" id="searchInput" placeholder="Name, ID or Phone..." onkeyup="filterBookings()">
+            <input type="text" id="searchInput" placeholder="Search Customer..." onkeyup="filterBookings()">
         </div>
         <div class="filters">
             <select id="monthFilter" onchange="filterBookings()">
@@ -176,12 +184,23 @@
             <select id="yearFilter" onchange="filterBookings()"></select>
             <button class="btn-reset" onclick="window.location.reload()">Reset</button>
         </div>
+
+        <div class="summary-bar">
+            <div class="summary-item bg-success-light">
+                <small>Collected</small>
+                <span id="totalCollected">₹0</span>
+            </div>
+            <div class="summary-item bg-danger-light">
+                <small>Total Due</small>
+                <span id="totalDue">₹0</span>
+            </div>
+        </div>
     </div>
 
     <div id="bookingList" class="booking-list">
         <div style="text-align: center; color: #999; padding: 100px 20px;">
             <i class="ri-loader-5-line ri-spin" style="font-size: 3rem; color: var(--pmh-red);"></i>
-            <p>Syncing Data...</p>
+            <p>Fetching Data...</p>
         </div>
     </div>
 
@@ -208,7 +227,7 @@
         <div class="modal-content">
             <i class="ri-hand-coin-line" style="font-size: 2.5rem; color: var(--success);"></i>
             <h3>Add Payment</h3>
-            <div id="modalCustomerName" class="modal-customer-tag">...</div>
+            <div id="modalCustomerName" style="font-weight:bold; margin-top:10px;">...</div>
             <p id="modalBalanceText" style="color: var(--danger); font-weight: bold;"></p>
             <input type="number" id="paymentInput" placeholder="Enter amount" inputmode="numeric">
             <div style="display: flex; gap: 10px;">

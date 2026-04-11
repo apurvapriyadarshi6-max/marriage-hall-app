@@ -17,18 +17,21 @@ router.get("/", async (req, res) => {
             query.$or = [
                 { name: searchRegex },
                 { bookingId: searchRegex },
-                { phone: searchRegex }
+                { phone: searchRegex },
+                { occasion: searchRegex }
             ];
         }
 
-        // 2. Filter Logic: specific Month and Year
-        if (month && year && month !== "" && year !== "") {
-            // Ensures prefix is YYYY-MM (e.g., 2026-04)
+        // 2. Filter Logic: specific Month and Year (matches YYYY-MM format)
+        if (month && year) {
             const prefix = `${year}-${month.padStart(2, '0')}`;
             query.dateFrom = { $regex: `^${prefix}` }; 
+        } else if (year) {
+            // Filter by year only
+            query.dateFrom = { $regex: `^${year}` };
         }
 
-        const bookings = await Booking.find(query).sort({ createdAt: -1 });
+        const bookings = await Booking.find(query).sort({ dateFrom: 1 }); // Sorted by event date
         res.json(bookings);
     } catch (err) {
         console.error("Booking Fetch Error:", err);
@@ -38,7 +41,7 @@ router.get("/", async (req, res) => {
 
 /**
  * @route   GET /api/bookings/:id
- * @desc    Get a single booking by ID
+ * @desc    Get a single booking by ID (Crucial for the Edit Page)
  */
 router.get("/:id", async (req, res) => {
     try {
@@ -56,11 +59,19 @@ router.get("/:id", async (req, res) => {
  */
 router.post("/", async (req, res) => {
     try {
-        const { total, paid } = req.body;
+        const { total, paid, name, phone, dateFrom } = req.body;
         
-        // Server-side math safety
+        // Basic Validation
+        if (!name || !phone || !dateFrom) {
+            return res.status(400).json({ error: "Name, Phone, and Date are required." });
+        }
+
+        // Generate a simple readable Booking ID if not provided (e.g., PMH-12345)
+        const bookingId = req.body.bookingId || `PMH-${Math.floor(1000 + Math.random() * 9000)}`;
+
         const bookingData = {
             ...req.body,
+            bookingId,
             remaining: (parseFloat(total) || 0) - (parseFloat(paid) || 0)
         };
 
@@ -80,37 +91,38 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
     try {
         const { total, paid } = req.body;
+        
+        // Find existing record first to ensure math is correct
+        const current = await Booking.findById(req.params.id);
+        if (!current) return res.status(404).json({ message: "Booking not found" });
+
         const updateData = { ...req.body };
 
-        // If prices are being updated, re-calculate remaining balance
-        if (total !== undefined || paid !== undefined) {
-            // We fetch the current record if one value is missing to ensure correct math
-            const current = await Booking.findById(req.params.id);
-            if (current) {
-                const newTotal = total !== undefined ? parseFloat(total) : current.total;
-                const newPaid = paid !== undefined ? parseFloat(paid) : current.paid;
-                updateData.remaining = newTotal - newPaid;
-            }
-        }
+        // Math Safety: Use new values if provided, otherwise fall back to current database values
+        const finalTotal = total !== undefined ? parseFloat(total) : current.total;
+        const finalPaid = paid !== undefined ? parseFloat(paid) : current.paid;
+        
+        updateData.remaining = (finalTotal || 0) - (finalPaid || 0);
 
         const updatedBooking = await Booking.findByIdAndUpdate(
             req.params.id,
             { $set: updateData },
             { 
-                returnDocument: 'after', 
+                new: true, // Returns the updated object
                 runValidators: true 
             }
         );
 
-        if (!updatedBooking) return res.status(404).json({ message: "Booking not found" });
         res.json(updatedBooking);
     } catch (err) {
+        console.error("Update Error:", err);
         res.status(400).json({ error: err.message });
     }
 });
 
 /**
  * @route   DELETE /api/bookings/:id
+ * @desc    Delete a booking permanently
  */
 router.delete("/:id", async (req, res) => {
     try {

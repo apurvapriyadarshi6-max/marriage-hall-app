@@ -1,23 +1,22 @@
 /**
  * Pandey Marriage Hall - Dashboard Logic
  * Unified Version: Works on Localhost & Render automatically.
+ * FIX: Prevents negative "Due Balance" and incorrect "Unpaid Count".
  */
 
 // 1. SMART URL CONFIGURATION
 const getApiUrl = () => {
-    // If we are running the unified server, the frontend and backend 
-    // share the same origin. A relative path is the safest 'one-time fix'.
+    // Relative path is best for unified deployments to avoid CORS
     return "/api/bookings";
 };
 
 async function loadDashboard() {
     try {
         const apiUrl = getApiUrl();
-        console.log("PMH System: Fetching data from", apiUrl);
+        console.log("PMH System: Fetching dashboard data from", apiUrl);
 
         const res = await fetch(apiUrl);
         
-        // Handle Server Errors (e.g., 404 if routes aren't mounted)
         if (!res.ok) {
             throw new Error(`HTTP Error ${res.status}: Check server.js route mounting.`);
         }
@@ -30,22 +29,26 @@ async function loadDashboard() {
             throw new Error("Invalid data format from server.");
         }
 
-        // Initialize counters for the Pandey Marriage Hall Stats
-        let pendingBookingsCount = 0;
+        // Initialize counters
+        let actualPendingCount = 0;
         let totalRevenue = 0;
-        let totalPendingAmount = 0;
+        let totalDueAmount = 0;
 
         bookings.forEach(b => {
-            // Convert to numbers safely to avoid NaN errors
-            const paid = parseFloat(b.paid) || 0;
-            const remaining = parseFloat(b.remaining) || 0;
+            // Convert to numbers safely
+            const totalBill = parseFloat(b.total) || 0;
+            const paidAmt = parseFloat(b.paid) || 0;
+            
+            // Revenue is the actual cash collected
+            totalRevenue += paidAmt;
 
-            totalRevenue += paid;
-            totalPendingAmount += remaining;
+            // NO-MINUS LOGIC: Calculate balance for this customer
+            const balance = totalBill - paidAmt;
 
-            // Logic: If money is still owed, it's a pending booking
-            if (remaining > 0) {
-                pendingBookingsCount++;
+            // Only add to "Total Due" if the customer actually owes money
+            if (balance > 0) {
+                totalDueAmount += balance;
+                actualPendingCount++;
             }
         });
 
@@ -60,16 +63,16 @@ async function loadDashboard() {
 
         // Update Dashboard UI Elements
         updateElementText("totalBookings", bookings.length);
-        updateElementText("pendingBookings", pendingBookingsCount);
+        updateElementText("pendingBookings", actualPendingCount);
         updateElementText("totalRevenue", formatCurrency(totalRevenue));
-        updateElementText("pendingAmount", formatCurrency(totalPendingAmount));
+        updateElementText("pendingAmount", formatCurrency(totalDueAmount));
 
-        console.log("PMH System: Dashboard loaded successfully.");
+        console.log("PMH System: Dashboard updated (Negative balances filtered).");
 
     } catch (err) {
         console.error("Dashboard calculation error:", err);
         
-        // Fallback UI: Show 'Offline' or '!' so the user knows something is wrong
+        // Fallback UI
         updateElementText("totalBookings", "--");
         updateElementText("pendingBookings", "!");
         updateElementText("totalRevenue", "Offline");
@@ -78,7 +81,7 @@ async function loadDashboard() {
 }
 
 /**
- * Utility: Safely updates the text of an element if it exists in index.html
+ * Utility: Safely updates the text of an element if it exists in the HTML
  */
 function updateElementText(id, value) {
     const el = document.getElementById(id);
