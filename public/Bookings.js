@@ -6,13 +6,13 @@
 let bookingsData = [];
 
 // 1. DYNAMIC API URL
+// USE THIS UNIFIED VERSION
 const getApiBaseUrl = () => {
-    return (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-        ? "" // Local relative path
-        : "https://pmh-personal.onrender.com"; // Production URL
+    // This empty string tells the browser to stay on the SAME server
+    return ""; 
 };
 
-const API_URL = `${getApiBaseUrl()}/api/bookings`;
+const API_URL = "/api/bookings";
 
 /**
  * HELPER: Converts "2024-05-12" to "12 May 2024"
