@@ -1,58 +1,55 @@
 /**
  * Pandey Marriage Hall - Dashboard Logic
- * Automatically switches between Local and Production APIs
- * Includes safety checks for server responses
+ * Unified Version: Works on Localhost & Render automatically.
  */
 
-// 1. DYNAMIC URL CONFIGURATION
+// 1. SMART URL CONFIGURATION
 const getApiUrl = () => {
-    const host = window.location.hostname;
-    // Detect if running on local laptop or Render/Netlify
-    if (host === "localhost" || host === "127.0.0.1") {
-        return "/api/bookings"; // Uses local port 5000 via proxy/relative path
-    }
-    return "https://pandey-marriage-hall.onrender.com/api/bookings";
+    // If we are running the unified server, the frontend and backend 
+    // share the same origin. A relative path is the safest 'one-time fix'.
+    return "/api/bookings";
 };
 
 async function loadDashboard() {
     try {
         const apiUrl = getApiUrl();
-        console.log("Fetching dashboard data from:", apiUrl);
+        console.log("PMH System: Fetching data from", apiUrl);
 
         const res = await fetch(apiUrl);
         
-        // Handle HTTP errors (404, 500, etc)
+        // Handle Server Errors (e.g., 404 if routes aren't mounted)
         if (!res.ok) {
-            throw new Error(`Server returned ${res.status}: Check if backend routes are mounted correctly.`);
+            throw new Error(`HTTP Error ${res.status}: Check server.js route mounting.`);
         }
         
         const bookings = await res.json();
 
-        // --- SAFETY CHECK: Ensure bookings is an Array ---
-        // This prevents the "forEach is not a function" error
+        // --- SAFETY CHECK: Guard against non-array responses ---
         if (!Array.isArray(bookings)) {
-            console.error("Expected Array, but received:", bookings);
-            throw new Error("Invalid data format received from server.");
+            console.error("Data received is not an array:", bookings);
+            throw new Error("Invalid data format from server.");
         }
 
-        // Initialize counters
+        // Initialize counters for the Pandey Marriage Hall Stats
         let pendingBookingsCount = 0;
         let totalRevenue = 0;
         let totalPendingAmount = 0;
 
         bookings.forEach(b => {
+            // Convert to numbers safely to avoid NaN errors
             const paid = parseFloat(b.paid) || 0;
             const remaining = parseFloat(b.remaining) || 0;
 
             totalRevenue += paid;
             totalPendingAmount += remaining;
 
+            // Logic: If money is still owed, it's a pending booking
             if (remaining > 0) {
                 pendingBookingsCount++;
             }
         });
 
-        // Professional Indian Rupee Formatter
+        // Professional Indian Rupee Formatter (INR)
         const formatCurrency = (num) => {
             return new Intl.NumberFormat('en-IN', {
                 style: 'currency',
@@ -61,16 +58,18 @@ async function loadDashboard() {
             }).format(num);
         };
 
-        // Update UI Elements with actual data
+        // Update Dashboard UI Elements
         updateElementText("totalBookings", bookings.length);
         updateElementText("pendingBookings", pendingBookingsCount);
         updateElementText("totalRevenue", formatCurrency(totalRevenue));
         updateElementText("pendingAmount", formatCurrency(totalPendingAmount));
 
+        console.log("PMH System: Dashboard loaded successfully.");
+
     } catch (err) {
         console.error("Dashboard calculation error:", err);
         
-        // Show fallback indicators so user knows there is a connection issue
+        // Fallback UI: Show 'Offline' or '!' so the user knows something is wrong
         updateElementText("totalBookings", "--");
         updateElementText("pendingBookings", "!");
         updateElementText("totalRevenue", "Offline");
@@ -79,14 +78,16 @@ async function loadDashboard() {
 }
 
 /**
- * Utility to safely update text content in the DOM
+ * Utility: Safely updates the text of an element if it exists in index.html
  */
 function updateElementText(id, value) {
     const el = document.getElementById(id);
     if (el) {
         el.innerText = value;
+    } else {
+        console.warn(`UI Sync: Element with ID '${id}' missing from HTML.`);
     }
 }
 
-// Initialize when the DOM is fully loaded
+// Start the dashboard logic once the page is ready
 document.addEventListener("DOMContentLoaded", loadDashboard);

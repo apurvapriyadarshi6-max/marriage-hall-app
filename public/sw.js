@@ -1,4 +1,11 @@
-const CACHE_NAME = "pmh-v5"; // Version 5
+/* =========================================
+   Pandey Marriage Hall - SERVICE WORKER
+   Version: 10.0 (Unified & Offline-Optimized)
+   ========================================= */
+
+const CACHE_NAME = "pmh-v10-final"; 
+
+// Assets to be stored on the phone for offline use
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
@@ -14,35 +21,35 @@ const ASSETS_TO_CACHE = [
   "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"
 ];
 
-// 1. Install Event: Cache Core Assets
+// 1. Install Event: Download and cache core UI assets
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log("PMH PWA: Caching UI Assets");
+      console.log("PMH PWA: Preparing offline shell...");
       return Promise.all(
         ASSETS_TO_CACHE.map(url => {
-          // Use 'no-cors' for external CDN requests to prevent opaque response errors
+          // Use 'no-cors' for external CDNs so they don't block the installation
           const request = url.startsWith('http') 
             ? new Request(url, { mode: 'no-cors' }) 
             : url;
           return cache.add(request).catch(err => {
-             console.warn(`Asset failed to cache: ${url}`, err);
+             console.warn(`Asset skipped (not critical): ${url}`);
           });
         })
       );
     })
   );
-  self.skipWaiting();
+  self.skipWaiting(); // Force the new SW to take over immediately
 });
 
-// 2. Activate Event: Cleanup & Take Control
+// 2. Activate Event: Delete old caches and take control of the app
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log("PMH PWA: Removing old cache", key);
+            console.log("PMH PWA: Clearing legacy cache:", key);
             return caches.delete(key);
           }
         })
@@ -52,55 +59,54 @@ self.addEventListener("activate", (event) => {
   return self.clients.claim();
 });
 
-// 3. Fetch Event: Smart Hybrid Strategy
+// 3. Fetch Event: The 'One-Time Fix' Hybrid Strategy
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // --- STRATEGY A: Network-First for API (Render Data) ---
-  if (url.origin.includes("onrender.com") || url.pathname.includes("/api/")) {
+  // --- STRATEGY A: Network-First for API Data (/api/) ---
+  // We want the newest money/booking data, but if offline, show the last known data.
+  if (url.pathname.includes("/api/")) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // If successful, update the cache with the fresh data
+          // Success: Save a fresh copy in the cache
           const clonedRes = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clonedRes));
           return response;
         })
         .catch(() => {
-          // If network fails, try serving from cache
+          // Failure (Offline): Serve from cache or return empty array to prevent dashboard crash
           return caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) return cachedResponse;
             
-            // CRITICAL FIX: Return a proper Response object if everything fails
-            return new Response(
-              JSON.stringify({ error: "Offline", message: "Connect to internet to load bookings." }), 
-              { headers: { "Content-Type": "application/json" } }
-            );
+            // Return empty JSON array so bookings.forEach() doesn't error out
+            return new Response(JSON.stringify([]), {
+              headers: { "Content-Type": "application/json" }
+            });
           });
         })
     );
   } 
   
-  // --- STRATEGY B: Cache-First for UI Assets ---
+  // --- STRATEGY B: Cache-First for UI Assets (HTML/CSS/JS) ---
+  // This makes the app load instantly, like a native app on a phone.
   else {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
-        // Return cached version or fetch from network
-        if (cachedResponse) return cachedResponse;
-
-        return fetch(event.request).then((networkResponse) => {
-          // Cache successful UI requests dynamically
+        // Return from cache if exists, otherwise fetch from network
+        return cachedResponse || fetch(event.request).then((networkResponse) => {
+          // Dynamically cache any new UI assets encountered
           if (networkResponse && networkResponse.status === 200) {
             const clonedRes = networkResponse.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, clonedRes));
           }
           return networkResponse;
-        }).catch(() => {
-            // If the UI fetch fails (truly offline and not cached), we return a fallback
-            if (event.request.mode === 'navigate') {
-                return caches.match('/index.html');
-            }
         });
+      }).catch(() => {
+        // Absolute fallback: If offline and page not cached, show index.html
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
       })
     );
   }
