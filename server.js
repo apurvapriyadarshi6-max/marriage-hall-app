@@ -2,97 +2,57 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const dns = require("dns");
 const path = require("path");
-const compression = require("compression");
+const dns = require("dns");
 
-/**
- * FIX SRV DNS ISSUE
- * Crucial for MongoDB Atlas connectivity on Render.
- */
+// Fix for DNS issues on certain cloud hosts
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const app = express();
 
-/* --- 1. PRE-MIDDLEWARE (CRITICAL FOR CORS) --- */
-// Manual Header Injection (Backup for the CORS package)
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    
-    // Handle Preflight requests immediately
-    if (req.method === "OPTIONS") {
-        return res.status(200).end();
-    }
-    next();
-});
-
-app.use(compression());
-app.use(cors()); // Standard CORS middleware as secondary layer
+/* --- 1. MIDDLEWARE --- */
 app.use(express.json());
 
-// Logger for debugging Render traffic
+// Robust CORS configuration
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Request Logger
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
 
-// Serve static files from 'public'
-app.use(express.static(path.join(__dirname, "public")));
+/* --- 2. MONGODB --- */
+mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI)
+    .then(() => console.log("✅ MongoDB Connected Successfully"))
+    .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
-/* --- 2. HEALTH CHECK --- */
-app.get("/health", (req, res) => {
-    res.status(200).json({ 
-        status: "Server is alive 🚀", 
-        db: mongoose.connection.readyState === 1 ? "Connected" : "Connecting..." 
-    });
-});
+/* --- 3. ROUTES --- */
+// Health Check
+app.get("/health", (req, res) => res.status(200).json({ status: "UP" }));
 
-/* --- 3. MONGODB CONNECTION --- */
-const dbUri = process.env.MONGODB_URI || process.env.MONGO_URI;
-
-const connectDB = async () => {
-    try {
-        if (!dbUri) throw new Error("Database URI is missing from ENV variables!");
-        
-        await mongoose.connect(dbUri, {
-            serverSelectionTimeoutMS: 15000, 
-        });
-        console.log("✅ MongoDB Connected Successfully");
-    } catch (err) {
-        console.error("❌ MongoDB Connection Error:", err.message);
-    }
-};
-connectDB();
-
-/* --- 4. API ROUTES --- */
+// API Mounting - ENSURE FOLDER NAMES ARE LOWERCASE
 const bookingRoutes = require("./routes/bookingRoutes");
 app.use("/api/bookings", bookingRoutes);
 
-/* --- 5. FRONTEND ROUTING --- */
+/* --- 4. STATIC FILES & CATCH-ALL --- */
+app.use(express.static(path.join(__dirname, "public")));
+
 app.get("*", (req, res) => {
-    // Prevent API 404s from returning HTML
+    // If it's an API request that wasn't caught, return JSON 404
     if (req.url.startsWith('/api')) {
-        return res.status(404).json({ error: "API Route Not Found" });
+        return res.status(404).json({ error: "Endpoint not found" });
     }
-    
-    const indexPath = path.join(__dirname, "public", "index.html");
-    res.sendFile(indexPath, (err) => {
-        if (err) {
-            res.status(404).send("Frontend missing: Ensure public/index.html exists.");
-        }
-    });
+    // Otherwise serve frontend
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-/* --- 6. ERROR HANDLING --- */
-app.use((err, req, res, next) => {
-    console.error("🚨 SERVER ERROR:", err.stack);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
-});
-
-/* --- 7. START SERVER --- */
+/* --- 5. START --- */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Server live on port ${PORT}`);
 });

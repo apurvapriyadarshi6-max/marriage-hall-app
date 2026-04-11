@@ -35,23 +35,27 @@ function shareOnWhatsApp(id) {
     window.open(`https://wa.me/91${b.phone}?text=${message}`, '_blank');
 }
 
-// 1. Load data from the server (UPDATED WITH RENDER URL)
+// 1. Load data from the server
 async function loadBookings() {
     try {
-        // Points directly to your Render backend
         const res = await fetch("https://pandey-marriage-hall.onrender.com/api/bookings");
         
         if (!res.ok) throw new Error("Failed to fetch");
         bookingsData = await res.json();
+        
+        // Hide the Syncing Loader if it exists
+        const list = document.getElementById("bookingList");
+        if (list) list.innerHTML = ""; 
+
         displayBookings(bookingsData);
     } catch (err) {
         console.error("Error loading bookings:", err);
-        const table = document.getElementById("bookingTable");
-        if(table) table.innerHTML = `<tr><td colspan="10" style="text-align:center; color:red;">Error loading data from server.</td></tr>`;
+        const list = document.getElementById("bookingList");
+        if(list) list.innerHTML = `<div style="text-align:center; color:red; padding:50px;">Error connecting to server. Please refresh.</div>`;
     }
 }
 
-// 2. Display bookings (Supports Desktop Table & Mobile Cards)
+// 2. Display bookings
 function displayBookings(data) {
     const table = document.getElementById("bookingTable");
     const list = document.getElementById("bookingList"); 
@@ -61,7 +65,7 @@ function displayBookings(data) {
 
     if (data.length === 0) {
         if (table) table.innerHTML = "<tr><td colspan='10' style='text-align:center;'>No bookings found</td></tr>";
-        if (list) list.innerHTML = "<div style='text-align:center; padding:20px;'>No bookings found</div>";
+        if (list) list.innerHTML = "<div style='text-align:center; padding:20px;'>No bookings found in database</div>";
         return;
     }
 
@@ -140,7 +144,6 @@ function displayBookings(data) {
     });
 }
 
-// --- ENHANCED QUICK PAY HANDLER (UPDATED WITH RENDER URL) ---
 function quickPay(id, currentPaid, total, name) {
     const remaining = total - currentPaid;
     const modal = document.getElementById("paymentModal");
@@ -164,7 +167,6 @@ function quickPay(id, currentPaid, total, name) {
 
         const newPaidTotal = parseFloat(currentPaid) + amt;
         try {
-            // Updated to point to Render backend
             const res = await fetch("https://pandey-marriage-hall.onrender.com/api/bookings/" + id, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -189,7 +191,6 @@ function closeModal() {
     if(modal) modal.style.display = "none";
 }
 
-// 3. Delete a booking (UPDATED WITH RENDER URL)
 async function deleteBooking(id) {
     if (!confirm("Are you sure you want to delete this booking?")) return;
     try {
@@ -198,7 +199,6 @@ async function deleteBooking(id) {
     } catch (err) { console.error("Delete error:", err); }
 }
 
-// 4. Search and Filter Logic
 function filterBookings() {
     const search = document.getElementById("searchInput").value.toLowerCase();
     const month = document.getElementById("monthFilter").value;
@@ -217,12 +217,10 @@ function filterBookings() {
     displayBookings(filtered);
 }
 
-// 5. Navigate to edit page
 function editBooking(id) {
     window.location.href = "new-booking.html?id=" + id;
 }
 
-// 6. Generate Year Options
 function generateYears() {
     const select = document.getElementById("yearFilter");
     if (!select) return;
@@ -235,7 +233,6 @@ function generateYears() {
     }
 }
 
-// 7. FULL BILL GENERATOR (Everything Kept Intact)
 function generateBill(id) {
     const booking = bookingsData.find(b => b._id === id);
     if (!booking) return;
