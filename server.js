@@ -9,48 +9,56 @@ const helmet = require("helmet");
 
 /**
  * FIX SRV DNS ISSUE
- * Mandatory for MongoDB Atlas connectivity on Render.
+ * Crucial for MongoDB Atlas connectivity on cloud hosts like Render.
  */
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const app = express();
 
 /* --- 1. SECURITY & PERFORMANCE --- */
-// Helmet helps secure your app by setting various HTTP headers
 app.use(helmet({
-    contentSecurityPolicy: false, // Disabled to allow external CDNs (RemixIcon/FullCalendar)
+    contentSecurityPolicy: false, // Allows CDNs like RemixIcon/FullCalendar
+    crossOriginEmbedderPolicy: false
 }));
 
-// Gzip compression for faster loading
-app.use(compression());
+app.use(compression()); // Gzip compression for faster dashboard loading
 
-/* --- 2. CORS HARD-FIX (PREFLIGHT GUARD) --- */
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    
-    if (req.method === "OPTIONS") {
-        return res.status(200).end();
-    }
-    next();
-});
+/* --- 2. ADVANCED CORS CONFIGURATION --- */
+const allowedOrigins = [
+    "https://marriage-hall-app.onrender.com", // Your Frontend
+    "http://localhost:5000",                  // Local Testing
+    "http://127.0.0.1:5000"
+];
 
-app.use(cors()); 
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+    credentials: true
+}));
+
 app.use(express.json());
 
-// Request Logger for Render Dashboard
+// Request Logger (Helpful for debugging Render logs)
 app.use((req, res, next) => {
     console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
     next();
 });
 
-/* --- 3. MONGODB CONNECTION WITH RECONNECT LOGIC --- */
+/* --- 3. MONGODB CONNECTION --- */
 const dbUri = process.env.MONGODB_URI || process.env.MONGO_URI;
 
 const connectDB = async () => {
     try {
-        if (!dbUri) throw new Error("Database URI is missing from ENV variables!");
+        if (!dbUri) throw new Error("Database URI is missing from ENV!");
         
         await mongoose.connect(dbUri, {
             serverSelectionTimeoutMS: 15000, 
@@ -59,7 +67,7 @@ const connectDB = async () => {
         console.log("✅ MongoDB Connected Successfully");
     } catch (err) {
         console.error("❌ MongoDB Connection Error:", err.message);
-        // Retry connection after 5 seconds if it fails
+        // Automatic retry after 5 seconds
         setTimeout(connectDB, 5000);
     }
 };
@@ -69,7 +77,6 @@ connectDB();
 app.use(express.static(path.join(__dirname, "public")));
 
 /* --- 5. API ROUTES --- */
-// Health Check (Keeps Render instance awake)
 app.get("/health", (req, res) => {
     res.status(200).json({ 
         status: "UP", 
@@ -80,29 +87,28 @@ app.get("/health", (req, res) => {
 const bookingRoutes = require("./routes/bookingRoutes");
 app.use("/api/bookings", bookingRoutes);
 
-/* --- 6. CATCH-ALL FRONTEND ROUTING --- */
+/* --- 6. FRONTEND ROUTING & ERROR PREVENTION --- */
 app.get("*", (req, res) => {
-    // If an API request reaches here, it's a 404
+    // If an API request reaches here, it's a true 404
     if (req.url.startsWith('/api')) {
         return res.status(404).json({ error: "API Endpoint not found" });
     }
     
+    // Serve the SPA frontend
     const indexPath = path.join(__dirname, "public", "index.html");
     res.sendFile(indexPath, (err) => {
         if (err) {
-            console.error("❌ index.html missing in public folder");
-            res.status(404).send("Application Files Missing.");
+            res.status(404).send("Frontend assets not found in public folder.");
         }
     });
 });
 
-/* --- 7. ERROR BOUNDARY --- */
+/* --- 7. GLOBAL ERROR BOUNDARY --- */
 app.use((err, req, res, next) => {
-    console.error("🚨 CRITICAL ERROR:", err.message);
+    console.error("🚨 SERVER ERROR:", err.message);
     res.status(500).json({ 
         success: false, 
-        message: "Internal Server Error",
-        error: process.env.NODE_ENV === 'development' ? err.message : null
+        message: "Internal Server Error"
     });
 });
 

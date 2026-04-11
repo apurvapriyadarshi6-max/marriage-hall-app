@@ -1,4 +1,4 @@
-const CACHE_NAME = "pmh-v4"; // Version 4
+const CACHE_NAME = "pmh-v5"; // Version 5
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
@@ -19,10 +19,13 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log("PMH PWA: Caching UI Assets");
-      // Map ensures that one failing asset doesn't break the whole install
       return Promise.all(
         ASSETS_TO_CACHE.map(url => {
-          return cache.add(new Request(url, { mode: 'no-cors' })).catch(err => {
+          // Use 'no-cors' for external CDN requests to prevent opaque response errors
+          const request = url.startsWith('http') 
+            ? new Request(url, { mode: 'no-cors' }) 
+            : url;
+          return cache.add(request).catch(err => {
              console.warn(`Asset failed to cache: ${url}`, err);
           });
         })
@@ -58,43 +61,46 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Success: Clone and Update Cache
+          // If successful, update the cache with the fresh data
           const clonedRes = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clonedRes));
           return response;
         })
         .catch(() => {
-          // Failure: Serve from Cache
+          // If network fails, try serving from cache
           return caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) return cachedResponse;
             
-            // Final Fallback: Return Offline JSON
-            return new Response(JSON.stringify({ 
-              error: "Offline", 
-              message: "Check your internet connection." 
-            }), {
-              headers: { "Content-Type": "application/json" }
-            });
+            // CRITICAL FIX: Return a proper Response object if everything fails
+            return new Response(
+              JSON.stringify({ error: "Offline", message: "Connect to internet to load bookings." }), 
+              { headers: { "Content-Type": "application/json" } }
+            );
           });
         })
     );
   } 
   
-  // --- STRATEGY B: Cache-First for UI Assets (HTML/CSS/JS) ---
+  // --- STRATEGY B: Cache-First for UI Assets ---
   else {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         // Return cached version or fetch from network
-        return cachedResponse || fetch(event.request).then((networkResponse) => {
-          // If network works, cache it for next time
+        if (cachedResponse) return cachedResponse;
+
+        return fetch(event.request).then((networkResponse) => {
+          // Cache successful UI requests dynamically
           if (networkResponse && networkResponse.status === 200) {
             const clonedRes = networkResponse.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, clonedRes));
           }
           return networkResponse;
+        }).catch(() => {
+            // If the UI fetch fails (truly offline and not cached), we return a fallback
+            if (event.request.mode === 'navigate') {
+                return caches.match('/index.html');
+            }
         });
-      }).catch(() => {
-        // Silent fail for missing decorative assets
       })
     );
   }
