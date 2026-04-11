@@ -6,85 +6,93 @@ const dns = require("dns");
 const path = require("path");
 const compression = require("compression");
 
-/* * FIX SRV DNS ISSUE 
- * Crucial for MongoDB Atlas connectivity on cloud hosts like Render.
+/**
+ * FIX SRV DNS ISSUE
+ * Crucial for MongoDB Atlas connectivity on Render.
  */
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const app = express();
 
-/* --- 1. HEALTH CHECK (MUST BE TOP) --- */
-// This is now at the very top to bypass all other logic.
-app.get("/health", (req, res) => {
-    res.status(200).send("Server is running! 🚀");
+/* --- 1. PRE-MIDDLEWARE (CRITICAL FOR CORS) --- */
+// Manual Header Injection (Backup for the CORS package)
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    
+    // Handle Preflight requests immediately
+    if (req.method === "OPTIONS") {
+        return res.status(200).end();
+    }
+    next();
 });
 
-/* --- 2. MIDDLEWARE --- */
 app.use(compression());
-app.use(cors({
-    origin: '*', // Allows all origins (Netlify, localhost, etc.)
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors()); // Standard CORS middleware as secondary layer
 app.use(express.json());
 
-// Log every request to Render logs so we can debug "Not Found" errors
+// Logger for debugging Render traffic
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
 });
 
-// Serve static files from the 'public' folder
+// Serve static files from 'public'
 app.use(express.static(path.join(__dirname, "public")));
 
+/* --- 2. HEALTH CHECK --- */
+app.get("/health", (req, res) => {
+    res.status(200).json({ 
+        status: "Server is alive 🚀", 
+        db: mongoose.connection.readyState === 1 ? "Connected" : "Connecting..." 
+    });
+});
+
 /* --- 3. MONGODB CONNECTION --- */
+const dbUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+
 const connectDB = async () => {
     try {
-        const dbUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+        if (!dbUri) throw new Error("Database URI is missing from ENV variables!");
         
-        if (!dbUri) {
-            console.error("❌ Database URI is missing from Render Variables!");
-            return;
-        }
-
         await mongoose.connect(dbUri, {
-            serverSelectionTimeoutMS: 15000,
-            socketTimeoutMS: 45000,
+            serverSelectionTimeoutMS: 15000, 
         });
-        console.log("✅ Pandey Marriage Hall DB Connected");
+        console.log("✅ MongoDB Connected Successfully");
     } catch (err) {
         console.error("❌ MongoDB Connection Error:", err.message);
     }
 };
-
 connectDB();
 
 /* --- 4. API ROUTES --- */
 const bookingRoutes = require("./routes/bookingRoutes");
 app.use("/api/bookings", bookingRoutes);
 
-/* --- 5. FRONTEND CATCH-ALL (MUST BE BOTTOM) --- */
-/** * If no API route or static file is found, send index.html.
- * This handles PWA/Netlify routing.
- */
+/* --- 5. FRONTEND ROUTING --- */
 app.get("*", (req, res) => {
+    // Prevent API 404s from returning HTML
+    if (req.url.startsWith('/api')) {
+        return res.status(404).json({ error: "API Route Not Found" });
+    }
+    
     const indexPath = path.join(__dirname, "public", "index.html");
     res.sendFile(indexPath, (err) => {
         if (err) {
-            console.error("❌ Failed to send index.html:", err.message);
-            res.status(404).send("Front-end files missing or index.html not found in public folder.");
+            res.status(404).send("Frontend missing: Ensure public/index.html exists.");
         }
     });
 });
 
-/* --- 6. GLOBAL ERROR HANDLING --- */
+/* --- 6. ERROR HANDLING --- */
 app.use((err, req, res, next) => {
     console.error("🚨 SERVER ERROR:", err.stack);
     res.status(500).json({ success: false, message: "Internal Server Error" });
 });
 
-/* --- 7. SERVER START --- */
+/* --- 7. START SERVER --- */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Pandey Marriage Hall Server live on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
