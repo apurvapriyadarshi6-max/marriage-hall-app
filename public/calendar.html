@@ -176,10 +176,8 @@
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 // Detect environment for API URL
-                const API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-                    ? "/api/bookings"
-                    : "https://pandey-marriage-hall.onrender.com/api/bookings";
-
+                // Simple relative path - works everywhere!
+const API_URL = "/api/bookings";
                 const res = await fetch(API_URL);
                 const bookings = await res.json();
                 
